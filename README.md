@@ -1,5 +1,5 @@
 ﻿<p align="center">
-    <img src="assets/logos/icon.png">
+    <img src="assets/logos/logo.png">
 </p>
 
 # BepInS&x
@@ -8,10 +8,14 @@ Bepis Injector for s&box
 
 ---
 
-BepInS&x is a fork of plugin / modding framework BepInEx 6, with added support for s&box
+BepInS&x is a fork of plugin / modding framework BepInEx 6, with added support for s&box.
+
+---
 
 All Unity Mono/IL2CPP/XNA/FNA/MonoGame support has been stripped in order to simplify the codebase; this fork only supports s&box.  
+  
 Since s&box uses MonoMod and Mono.Cecil as well, this fork uses the same versions as s&box.  
+  
 A barebones custom Doorstop implementation is also present, used to load a .NET host, which in turn is used to load BepInS&x.  
 
 ## Writing plugins  
