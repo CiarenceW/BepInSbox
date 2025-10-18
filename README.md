@@ -1,73 +1,55 @@
 ﻿<p align="center">
-    <img src="https://avatars2.githubusercontent.com/u/39589027?s=256">
+    <img src="assets/logos/icon.png">
 </p>
 
-# BepInEx
+# BepInS&x
 
-![Github All Releases](https://img.shields.io/github/downloads/bepinex/bepinex/total.svg)
-![GitHub release](https://img.shields.io/github/release/bepinex/bepinex.svg)
-[![BepInEx Discord](https://user-images.githubusercontent.com/7288322/34429117-c74dbd12-ecb8-11e7-896d-46369cd0de5b.png)](https://discord.gg/MpFEDAg)
-
-Bepis Injector Extensible
+Bepis Injector for s&box
 
 ---
 
-BepInEx is a plugin / modding framework for Unity Mono, IL2CPP and .NET framework games (XNA, FNA, MonoGame, etc.)
+BepInS&x is a fork of plugin / modding framework BepInEx 6, with added support for s&box
 
-(Currently only Unity Mono has stable releases)
+All Unity Mono/IL2CPP/XNA/FNA/MonoGame support has been stripped in order to simplify the codebase; this fork only supports s&box.  
+Since s&box uses MonoMod and Mono.Cecil as well, this fork uses the same versions as s&box.  
+A barebones custom Doorstop implementation is also present, used to load a .NET host, which in turn is used to load BepInS&x.  
 
-#### Platform compatibility chart
+## Writing plugins  
+A basic BepInS&x plugin looks like this:  
+```CS
+[BepInPlugin("SamplePlugin", "ciarencew.SamplePlugin", "1.0.0")] //This is what the chainloader will look for to load a plugin, it won't load without it
+public class SamplePlugin : BaseSandboxPlugin
+{
+	protected override void OnAwake()
+	{
+		Logger.LogInfo("Hello, world!");
+	}
+}
+```  
+  
+The BepInPlugin attribute is always needed once for each BaseSandboxPlugin. It provides vital information such as:  
+- The name of the plugin (can be changed).  
+- The GUID of the plugin (shouldn't be changed), used for the config, as well as other plugins' dependencies.  
+- The version of the plugin, used for dependencies.  
+  
+The BaseSandboxPlugin class is derived from Sandbox.Component, it is the core of your plugin, and provides 3 useful Properties:  
+- A `Logger`, use this to log things.  
+- A `Config`, you can use this to load and save custom configs without having to worry about loading.  
+- A `HarmonyInstance`, view [this](https://harmony.pardeike.net/articles/intro.html) and [that](https://github.com/BepInEx/HarmonyX/wiki) for more info.   
+  
+For more info, visit https://docs.bepinex.dev/articles/dev_guide/plugin_tutorial/index.html  
 
-|              | Windows | OSX  | Linux | ARM |
-|--------------|---------|------|-------|-----|
-| Unity Mono   | ✔️      | ✔️  | ✔️    | N/A |
-| Unity IL2CPP | ✔️      | ❌   | ✔     | ❌  |
-| .NET / XNA   | ✔️      | Mono | Mono  | N/A |
-
-A more comprehensive comparison list of features and compatibility is available at https://bepis.io/unity.html
-
-## Resources
-
-**[Latest releases](https://github.com/BepInEx/BepInEx/releases)**
-
-**[Bleeding Edge builds](https://builds.bepinex.dev/projects/bepinex_be)**
-
-**[How to install (latest releases)](https://docs.bepinex.dev/articles/user_guide/installation/index.html)**
-
-**[How to install (Bleeding Edge, BepInEx 6)](https://docs.bepinex.dev/master/articles/user_guide/installation/index.html)**
-
-**[User and developer guides](https://docs.bepinex.dev/master/)**
-
-**[Discord server](https://discord.gg/MpFEDAg)**
-
-### Available plugin loaders
-
-| Name              | Link to project                                                                           |
-|-------------------|-------------------------------------------------------------------------------------------|
-| BSIPA             | [BepInEx.BSIPA.Loader](https://github.com/BepInEx/BepInEx.BSIPA.Loader)                   |
-| IPA               | [IPALoaderX](https://github.com/BepInEx/IPALoaderX)                                       |
-| MelonLoader       | [BepInEx.MelonLoader.Loader](https://github.com/BepInEx/BepInEx.MelonLoader.Loader)       |
-| MonoMod           | [BepInEx.MonoMod.Loader](https://github.com/BepInEx/BepInEx.MonoMod.Loader)               |
-| MuseDashModLoader | [BepInEx.MDML.Loader](https://github.com/BepInEx/BepInEx.MDML.Loader)                     |
-| Partiality        | [BepInEx-Partiality-Wrapper](https://github.com/sinai-dev/BepInEx-Partiality-Wrapper)     |
-| Sybaris           | [BepInEx.SybarisLoader.Patcher](https://github.com/BepInEx/BepInEx.SybarisLoader.Patcher) |
-| UnityInjector     | [BepInEx.UnityInjector.Loader](https://github.com/BepInEx/BepInEx.UnityInjectorLoader)    |
-| Unity Mod Manager | [Yan.UMMLoader](https://github.com/hacknet-bar/Yan.UMMLoader)                             |
-| uMod              | [BepInEx.uMod.Loader](https://github.com/BepInEx/BepInEx.uMod.Loader)                     |
+## Building  
+To build BepInS&x, execute the build.cmd script. You'll also need to have s&box installed, and to have started it at least once.  
+To build the Doorstop, just use VS2022 and build it from there :)
 
 ## Used libraries
 
-- [NeighTools/UnityDoorstop](https://github.com/NeighTools/UnityDoorstop) - v4.3.0
-- [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) - v2.10.2
-- [0x0ade/MonoMod](https://github.com/0x0ade/MonoMod) - v22.7.31.1
+- [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) - v2.10.4
+- [MonoMod/MonoMod](https://github.com/MonoMod/MonoMod) - v25.0.8.0
 - [jbevain/cecil](https://github.com/jbevain/cecil) - v0.10.4
-
-#### IL2CPP libraries
-
-- [SamboyCoding/Cpp2IL](https://github.com/SamboyCoding/Cpp2IL) - v2022.0.7.2
-- [BepInEx/Il2CppInterop](https://github.com/BepInEx/Il2CppInterop) - v1.4.5
-- [BepInEx/dotnet-runtime](https://github.com/BepInEx/dotnet-runtime) - v6.0.7
+- [dotnet/runtime](https://github.com/dotnet/runtime) - v9.0.9 (hostfxr, used by the Doorstop)
 
 ## License
 
-The BepInEx project is licensed under the LGPL-2.1 license.
+The BepInS&x project is licensed under the LGPL-2.1 license.

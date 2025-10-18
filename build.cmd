@@ -1,7 +1,4 @@
-:; set -eo pipefail
-:; SCRIPT_DIR=$(cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd)
-:; ${SCRIPT_DIR}/build.sh "$@"
-:; exit $?
-
-@ECHO OFF
-powershell -ExecutionPolicy ByPass -NoProfile -File "%~dp0build.ps1" %*
+dotnet build "./BepInEx.Core/BepInEx.Core.csproj"
+dotnet build "./BepInEx.Preloader.Core/BepInEx.Preloader.Core.csproj"
+dotnet build "./Runtimes/NET/BepInEx.NET.Common/BepInEx.NET.Common.csproj"
+dotnet build "./Runtimes/NET/BepInEx.NET.CoreCLR/BepInEx.NET.CoreCLR.csproj"

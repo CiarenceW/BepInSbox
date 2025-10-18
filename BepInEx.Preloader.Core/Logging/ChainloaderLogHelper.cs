@@ -72,7 +72,7 @@ public static class ChainloaderLogHelper
 
         // Not sure what it does on Linux. I think it returns the kernel version there too, but we already get the utsname structure from SetPlatform() regardless
 
-        if (PlatformHelper.Is(Platform.Windows))
+        if (PlatformDetection.OS.Is(OSKind.Windows))
         {
             osVersion = PlatformUtils.WindowsVersion;
 
@@ -95,13 +95,12 @@ public static class ChainloaderLogHelper
             else if (osVersion.Major <= 5)
                 builder.Append("XP");
 
-            if (PlatformHelper.Is(Platform.Wine))
+            if (PlatformDetection.OS.Is(OSKind.Wine))
                 builder.AppendFormat(" (Wine {0})", PlatformUtils.WineVersion);
         }
-        else if (PlatformHelper.Is(Platform.MacOS))
+        else if (PlatformDetection.OS.Is(OSKind.OSX))
         {
             builder.Append("macOS ");
-
 
             var osxVersion = osVersion.ToString(3);
 
@@ -114,7 +113,7 @@ public static class ChainloaderLogHelper
                 builder.AppendFormat("Unknown (kernel {0})", osVersion);
             }
         }
-        else if (PlatformHelper.Is(Platform.Linux))
+        else if (PlatformDetection.OS.Is(OSKind.Linux))
         {
             builder.Append("Linux");
 
@@ -124,18 +123,18 @@ public static class ChainloaderLogHelper
             }
         }
 
-        builder.Append(PlatformHelper.Is(Platform.Bits64) ? " 64-bit" : " 32-bit");
+        builder.Append(PlatformDetection.Architecture.Has(ArchitectureKind.Bits64) ? " 64-bit" : " 32-bit");
 
-        if (PlatformHelper.Is(Platform.Android))
+        if (PlatformDetection.OS.Is(OSKind.Android))
         {
             builder.Append(" Android");
         }
 
-        if (PlatformHelper.Is(Platform.ARM))
+        if (PlatformDetection.Architecture.Has(ArchitectureKind.Arm))
         {
             builder.Append(" ARM");
 
-            if (PlatformHelper.Is(Platform.Bits64))
+            if (PlatformDetection.Architecture.Has(ArchitectureKind.Bits64))
                 builder.Append("64");
         }
 

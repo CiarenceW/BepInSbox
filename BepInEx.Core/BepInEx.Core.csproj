@@ -1,19 +1,59 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <Description>BepInEx Core library</Description>
-        <TargetFrameworks>net35;netstandard2.0</TargetFrameworks>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <!-- Force nuget assembly output on netstandard2.0 -->
-        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <TargetFramework>net9.0</TargetFramework>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All"/>
-        <PackageReference Include="HarmonyX" Version="2.10.2" />
-        <PackageReference Include="SemanticVersioning" Version="2.0.2"/>
-        <PackageReference Include="MonoMod.Utils" Version="22.7.31.1"/>
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
+        <PackageReference Include="HarmonyX" Version="2.14.0" />
+        <PackageReference Include="MonoMod.RuntimeDetour" Version="25.2.3" />
+        <PackageReference Include="SemanticVersioning" Version="2.0.2" />
+        <PackageReference Include="MonoMod.Utils" Version="25.0.8" />
     </ItemGroup>
     <ItemGroup>
-        <Compile Remove="Contract\IPlugin.cs"/>
+        <Compile Remove="Contract\IPlugin.cs" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!--The $(FACEPUNCH_ENGINE) envvar points to the main sbox install dir once sbox is launched-->
+        <Reference Include="Sandbox.Engine">
+            <HintPath>$(FACEPUNCH_ENGINE)\bin\managed\Sandbox.Engine.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="Sandbox.NetCore">
+            <HintPath>$(FACEPUNCH_ENGINE)\bin\managed\Sandbox.NetCore.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="Sandbox.Tools">
+            <HintPath>$(FACEPUNCH_ENGINE)\bin\managed\Sandbox.Tools.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="Sandbox.Mounting">
+            <HintPath>$(FACEPUNCH_ENGINE)\bin\managed\Sandbox.Mounting.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="Sandbox.Services">
+            <HintPath>$(FACEPUNCH_ENGINE)\bin\managed\Sandbox.Services.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="Sandbox.Compiling">
+            <HintPath>$(FACEPUNCH_ENGINE)\bin\managed\Sandbox.Compiling.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="Sandbox.Bind">
+            <HintPath>$(FACEPUNCH_ENGINE)\bin\managed\Sandbox.Bind.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="Sandbox.GameInstance">
+            <HintPath>$(FACEPUNCH_ENGINE)\bin\managed\Sandbox.GameInstance.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
+        <Reference Include="Sandbox.Reflection">
+            <HintPath>$(FACEPUNCH_ENGINE)\bin\managed\Sandbox.Reflection.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
     </ItemGroup>
 
     <!-- CopyLocalLockFileAssemblies causes to also output shared assemblies: https://github.com/NuGet/Home/issues/4837#issuecomment-354536302 -->
@@ -21,9 +61,9 @@
     <!-- Also delete deps.json as they are not used by mono -->
     <Target Name="DeleteSys" AfterTargets="Build">
         <ItemGroup>
-            <FilesToDelete Include="$(OutputPath)System.*.dll"/>
-            <FilesToDelete Include="$(OutputPath)*.deps.json"/>
+            <FilesToDelete Include="$(OutputPath)System.*.dll" />
+            <FilesToDelete Include="$(OutputPath)Sandbox.*.dll" />
         </ItemGroup>
-        <Delete Files="@(FilesToDelete)"/>
+        <Delete Files="@(FilesToDelete)" />
     </Target>
 </Project>

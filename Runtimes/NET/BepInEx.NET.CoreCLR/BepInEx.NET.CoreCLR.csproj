@@ -2,16 +2,16 @@
 
     <PropertyGroup>
         <Description>BepInEx support library for CoreCLR games</Description>
-        <TargetFrameworks>netcoreapp3.1;net6.0</TargetFrameworks>
         <OutputPath>$(BuildDir)/NET.CoreCLR</OutputPath>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+        <TargetFramework>net9.0</TargetFramework>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\BepInEx.NET.Common\BepInEx.NET.Common.csproj"/>
-        <ProjectReference Include="..\..\..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj"/>
+        <ProjectReference Include="..\BepInEx.NET.Common\BepInEx.NET.Common.csproj" />
+        <ProjectReference Include="..\..\..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj" />
     </ItemGroup>
 
-    <Import Project="..\BepInEx.NET.Shared\BepInEx.NET.Shared.projitems" Label="Shared"/>
+    <Import Project="..\BepInEx.NET.Shared\BepInEx.NET.Shared.projitems" Label="Shared" />
 </Project>

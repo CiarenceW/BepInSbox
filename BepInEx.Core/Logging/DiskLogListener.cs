@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -53,7 +53,12 @@ public class DiskLogListener : ILogListener
 
         LogWriter = TextWriter.Synchronized(new StreamWriter(fileStream, Utility.UTF8NoBom));
 
-        if (delayedFlushing) FlushTimer = new Timer(o => { LogWriter?.Flush(); }, null, 2000, 2000);
+#warning Enabling Instant flushing in the config makes the following loop forever, TODO: investigate
+        {
+            delayedFlushing = true;
+
+            if (delayedFlushing) FlushTimer = new Timer(o => { LogWriter?.Flush(); }, null, 2000, 2000);
+        }
 
         InstantFlushing = !delayedFlushing;
     }

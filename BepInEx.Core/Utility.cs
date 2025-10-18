@@ -1,12 +1,13 @@
-﻿using System;
+using Mono.Cecil;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
+using System.Runtime.InteropServices;
 using System.Security.Cryptography;
 using System.Text;
-using Mono.Cecil;
 
 namespace BepInEx;
 
@@ -28,6 +29,11 @@ public static class Utility
     ///     An encoding for UTF-8 which does not emit a byte order mark (BOM).
     /// </summary>
     public static Encoding UTF8NoBom { get; } = new UTF8Encoding(false);
+
+    public static T AsDelegate<T>(this nint s) where T : class
+    {
+        return Marshal.GetDelegateForFunctionPointer(s, typeof(T)) as T;
+    }
 
     private static bool CheckSRE()
     {

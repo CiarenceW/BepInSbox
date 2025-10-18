@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.InteropServices;
 using MonoMod.Utils;
 
 namespace BepInEx.Unix;
@@ -21,40 +22,61 @@ internal static class UnixStreamHelper
 
     public delegate int isattyDelegate(int fd);
 
-    [DynDllImport("libc")]
     public static dupDelegate dup;
 
-    [DynDllImport("libc")]
     public static fdopenDelegate fdopen;
 
-    [DynDllImport("libc")]
     public static freadDelegate fread;
 
-    [DynDllImport("libc")]
     public static fwriteDelegate fwrite;
 
-    [DynDllImport("libc")]
     public static fcloseDelegate fclose;
 
-    [DynDllImport("libc")]
     public static fflushDelegate fflush;
 
-    [DynDllImport("libc")]
     public static isattyDelegate isatty;
 
     static UnixStreamHelper()
     {
-        var libcMapping = new Dictionary<string, List<DynDllMapping>>
-        {
-            ["libc"] = new()
-            {
-                "libc.so.6",               // Ubuntu glibc
-                "libc",                    // Linux glibc
-                "/usr/lib/libSystem.dylib" // OSX POSIX
-            }
-        };
+        #warning someone needs to test this eventually ^^
 
-        typeof(UnixStreamHelper).ResolveDynDllImports(libcMapping);
+        if (DynDll.TryOpenLibrary("libc", out nint libcPtr))
+        {
+            if (libcPtr.TryGetExport(nameof(dup), out nint dupFptr))
+            {
+                dup = Marshal.GetDelegateForFunctionPointer<dupDelegate>(dupFptr);
+            }
+
+            if (libcPtr.TryGetExport(nameof(fdopen), out nint fdopenFptr))
+            {
+                fdopen = Marshal.GetDelegateForFunctionPointer<fdopenDelegate>(fdopenFptr);
+            }
+
+            if (libcPtr.TryGetExport(nameof(fread), out nint freadFptr))
+            {
+                fread = Marshal.GetDelegateForFunctionPointer<freadDelegate>(freadFptr);
+            }
+
+            if (libcPtr.TryGetExport(nameof(fwrite), out nint fwriteFptr))
+            {
+                fwrite = Marshal.GetDelegateForFunctionPointer<fwriteDelegate>(fwriteFptr);
+            }
+
+            if (libcPtr.TryGetExport(nameof(fclose), out nint fcloseFptr))
+            {
+                fclose = Marshal.GetDelegateForFunctionPointer<fcloseDelegate>(fcloseFptr);
+            }
+
+            if (libcPtr.TryGetExport(nameof(fflush), out nint fflushFptr))
+            {
+                fflush = Marshal.GetDelegateForFunctionPointer<fflushDelegate>(fflushFptr);
+            }
+
+            if (libcPtr.TryGetExport(nameof(isatty), out nint isattyFptr))
+            {
+                isatty = Marshal.GetDelegateForFunctionPointer<isattyDelegate>(isattyFptr);
+            }
+        }
     }
 
     public static Stream CreateDuplicateStream(int fileDescriptor)

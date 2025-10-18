@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Loader;
 
 // This code is shared between the .NET Framework launcher and the .NET Core entrypoint projects.
 // However, it cannot be placed in the NetLauncher.Common project because this has to do with assembly resolution,
@@ -13,16 +14,24 @@ namespace BepInEx.NET.Shared
 {
     internal static class SharedEntrypoint
     {
-        public static ResolveEventHandler RemoteResolve(List<string> resolveDirectories)
+        public static Func<AssemblyLoadContext, AssemblyName, Assembly> RemoteResolve(List<string> resolveDirectories)
         {
-            return (sender, args) => RemoteResolveInternal(sender, args, resolveDirectories);
+            return (context, name) => RemoteResolveInternal(context, name, resolveDirectories);
         }
 
-        private static Assembly RemoteResolveInternal(object sender,
-                                                      ResolveEventArgs reference,
+        private static Assembly RemoteResolveInternal(AssemblyLoadContext context,
+                                                      AssemblyName assemblyName,
                                                       List<string> resolveDirectories)
         {
-            var assemblyName = new AssemblyName(reference.Name);
+            //AppDomain seemingly lists all loaded assemblies, including BepInEx, which doesn't reside in AssemblyLoadContext.Default, but instead in IsolatedComponentLoadContext, maybe because we're loaded from HostFXR?
+            //Regardless, this is how we resolve the plugins' reference to us, prevents BepInEx.Core, Harmony, and SemanticVersioning from being loaded twice and not being assignable between eachother
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                if (assembly.GetName().Name == assemblyName.Name && assembly.GetName().Version >= assemblyName.Version)
+                {
+                    return assembly;
+                }
+            }
 
             foreach (var directory in resolveDirectories)
             {
@@ -56,7 +65,9 @@ namespace BepInEx.NET.Shared
                     }
 
                     if (assembly.GetName().Name == assemblyName.Name)
+                    {
                         return assembly;
+                    }
                 }
             }
 
@@ -65,6 +76,11 @@ namespace BepInEx.NET.Shared
 
         public static Assembly LocalResolve(object sender, ResolveEventArgs args)
         {
+            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+            {
+                Logging.Logger.Log(Logging.LogLevel.Info, assembly.FullName);
+            }
+
             var assemblyName = new AssemblyName(args.Name);
 
             var foundAssembly = AppDomain.CurrentDomain.GetAssemblies()

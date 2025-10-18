@@ -2,7 +2,9 @@ using System;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using BepInEx.Bootstrap;
+using BepInEx.Core.Sbox;
 using BepInEx.Logging;
 using BepInEx.NET.Common;
 using BepInEx.Preloader.Core;
@@ -21,8 +23,6 @@ namespace BepInEx.NET.CoreCLR
             var preloaderListener = new PreloaderConsoleListener();
             Logger.Listeners.Add(preloaderListener);
 
-            string entrypointAssemblyPath = !Paths.ExecutablePath.EndsWith(StartupHook.DoesNotExistPath) ? Paths.ExecutablePath : null;
-
             TypeLoader.SearchDirectories.Add(Paths.GameRootPath);
             
             Logger.Sources.Add(TraceLogSource.CreateSource());
@@ -31,24 +31,8 @@ namespace BepInEx.NET.CoreCLR
 
             Log.LogInfo($"CLR runtime version: {Environment.Version}");
 
-            Log.LogInfo($"Current executable: {Process.GetCurrentProcess().MainModule.FileName}");
-            Log.LogInfo($"Entrypoint assembly: {entrypointAssemblyPath ?? "<does not exist>"}");
+            Log.LogInfo($"Current executable: {Paths.ExecutablePath}");
             Log.LogInfo($"Launch arguments: {string.Join(' ', Environment.GetCommandLineArgs())}");
-
-
-            AssemblyBuildInfo executableInfo;
-
-            if (entrypointAssemblyPath != null)
-            {
-                using (var entrypointAssembly = AssemblyDefinition.ReadAssembly(entrypointAssemblyPath))
-                    executableInfo = AssemblyBuildInfo.DetermineInfo(entrypointAssembly);
-
-                Log.LogInfo($"Game executable build architecture: {executableInfo}");
-            }
-            else
-            {
-                Log.LogWarning("Game assembly is unknown, can't determine build architecture");
-            }
 
             Log.LogMessage("Preloader started");
 
@@ -67,11 +51,12 @@ namespace BepInEx.NET.CoreCLR
 
             Log.LogMessage("Preloader finished");
 
+            EngineHooks.Patch();
+
             Logger.Listeners.Remove(preloaderListener);
 
             var chainloader = new NetChainloader();
             chainloader.Initialize();
-            chainloader.Execute();
         }
     }
 }

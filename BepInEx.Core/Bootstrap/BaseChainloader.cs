@@ -1,9 +1,10 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.Loader;
 using System.Text;
 using System.Text.RegularExpressions;
 using BepInEx.Configuration;
@@ -142,7 +143,7 @@ public abstract class BaseChainloader<TPlugin>
             throw new InvalidOperationException("Chainloader cannot be initialized multiple times");
 
         // Set vitals
-        if (gameExePath != null)
+        if (gameExePath != null && string.IsNullOrEmpty(Paths.ExecutablePath))
             // Checking for null allows a more advanced initialization workflow, where the Paths class has been initialized before calling Chainloader.Initialize
             // This is used by Preloader to use environment variables, for example
             Paths.SetExecutablePath(gameExePath);
@@ -404,7 +405,7 @@ public abstract class BaseChainloader<TPlugin>
                 Logger.Log(LogLevel.Info, $"Loading [{plugin}]");
 
                 if (!loadedAssemblies.TryGetValue(plugin.Location, out var ass))
-                    loadedAssemblies[plugin.Location] = ass = Assembly.LoadFrom(plugin.Location);
+                    loadedAssemblies[plugin.Location] = ass = Assembly.LoadFile(plugin.Location);
 
                 Plugins[plugin.Metadata.GUID] = plugin;
                 TryRunModuleCtor(plugin, ass);

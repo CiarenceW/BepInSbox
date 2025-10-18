@@ -6,6 +6,8 @@ using BepInEx.Logging;
 using BepInEx.NET.CoreCLR;
 using BepInEx.NET.Shared;
 using BepInEx.Preloader.Core;
+using System.Runtime.InteropServices;
+using System.Runtime.Loader;
 
 internal class StartupHook
 {
@@ -13,39 +15,41 @@ internal class StartupHook
 
     public static string DoesNotExistPath = "_doesnotexist_.exe";
 
+    [UnmanagedCallersOnly]
     public static void Initialize()
     {
         var silentExceptionLog = $"bepinex_preloader_{DateTime.Now:yyyyMMdd_HHmmss_fff}.log";
 
         try
         {
-//#if DEBUG
-//          filename =
-//              Path.Combine(Directory.GetCurrentDirectory(),
-//                           Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName));
-//          ResolveDirectories.Add(Path.GetDirectoryName(filename));
+            //#if DEBUG
+            //          filename =
+            //              Path.Combine(Directory.GetCurrentDirectory(),
+            //                           Path.GetFileName(Process.GetCurrentProcess().MainModule.FileName));
+            //          ResolveDirectories.Add(Path.GetDirectoryName(filename));
 
-//          // for debugging within VS
-//          ResolveDirectories.Add(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName));
-//#else
-            
-            var executableFilename = Process.GetCurrentProcess().MainModule.FileName;
-            
-            var assemblyFilename = TryDetermineAssemblyNameFromDotnet(executableFilename)
+            //          // for debugging within VS
+            //          ResolveDirectories.Add(Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName));
+            //#else
+
+            var executableFilename = Environment.ProcessPath;
+
+            //We use a Doorstop dll, instead of using https://github.com/dotnet/runtime/blob/main/docs/design/features/host-startup-hook.md, so this is irrelevant
+            /*var assemblyFilename = TryDetermineAssemblyNameFromDotnet(executableFilename)
                                 ?? TryDetermineAssemblyNameFromStubExecutable(executableFilename)
-                                ?? TryDetermineAssemblyNameFromCurrentAssembly(executableFilename);
+                                ?? TryDetermineAssemblyNameFromCurrentAssembly(executableFilename);*/
 
             string gameDirectory = null;
 
-            if (assemblyFilename != null)
-                gameDirectory = Path.GetDirectoryName(assemblyFilename);
+            if (executableFilename != null)
+                gameDirectory = Path.GetDirectoryName(executableFilename);
 
             string bepinexCoreDirectory = null;
 
             if (gameDirectory != null)
                 bepinexCoreDirectory = Path.Combine(gameDirectory, "BepInEx", "core");
 
-            if (assemblyFilename == null || gameDirectory == null || !Directory.Exists(bepinexCoreDirectory))
+            if (executableFilename == null || gameDirectory == null || !Directory.Exists(bepinexCoreDirectory))
             {
                 throw new Exception("Could not determine game location, or BepInEx install location");
             }
@@ -55,9 +59,9 @@ internal class StartupHook
             ResolveDirectories.Add(bepinexCoreDirectory);
 //#endif
 
-            AppDomain.CurrentDomain.AssemblyResolve += SharedEntrypoint.RemoteResolve(ResolveDirectories);
+            AssemblyLoadContext.Default.Resolving += SharedEntrypoint.RemoteResolve(ResolveDirectories);
 
-            NetCorePreloaderRunner.OuterMain(assemblyFilename);
+            NetCorePreloaderRunner.OuterMain(executableFilename);
         }
         catch (Exception ex)
         {
@@ -164,11 +168,12 @@ namespace BepInEx.NET.CoreCLR
 
         internal static void OuterMain(string filename)
         {
+            //Not needed anymore, MonoMod does this on its own now, we only keeping it for the additional logging info
             PlatformUtils.SetPlatform();
 
             Paths.SetExecutablePath(filename);
 
-            AppDomain.CurrentDomain.AssemblyResolve += SharedEntrypoint.LocalResolve;
+            //AppDomain.CurrentDomain.AssemblyResolve += SharedEntrypoint.LocalResolve;
 
             PreloaderMain();
         }
