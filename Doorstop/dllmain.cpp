@@ -16,6 +16,7 @@
 #include <nethost.h>
 #include <coreclr_delegates.h>
 #include "dllmain.h"
+#include <time.h>
 
 HMODULE hm;
 
@@ -207,11 +208,13 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 
 		file.open("DoorstopLog.txt");
 
-		auto end = std::chrono::system_clock::now();
+		std::time_t result = 0;
 
-		std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+        char str[26];
 
-		file << std::ctime(&end_time) << std::endl;
+        ctime_s(str, sizeof(str), &result);
+
+		file << result << std::endl;
 
 		if (!file.is_open())
 		{
