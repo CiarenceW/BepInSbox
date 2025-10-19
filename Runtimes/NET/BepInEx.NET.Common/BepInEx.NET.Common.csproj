@@ -3,6 +3,7 @@
     <PropertyGroup>
         <Description>BepInEx common code for .NET-based games</Description>
         <TargetFramework>net9.0</TargetFramework>
+        <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     </PropertyGroup>
 
     <ItemGroup>
@@ -14,7 +15,6 @@
         <ProjectReference Include="..\..\..\BepInEx.Core\BepInEx.Core.csproj" />
         <ProjectReference Include="..\..\..\BepInEx.Preloader.Core\BepInEx.Preloader.Core.csproj" />
     </ItemGroup>
-
     <ItemGroup>
         <!--The $(FACEPUNCH_ENGINE) envvar points to the main sbox install dir once sbox is launched-->
         <Reference Include="Sandbox.Engine">

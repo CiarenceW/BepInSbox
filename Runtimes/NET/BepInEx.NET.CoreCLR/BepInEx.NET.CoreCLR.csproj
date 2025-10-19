@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <Description>BepInEx support library for CoreCLR games</Description>
@@ -6,6 +6,7 @@
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
         <TargetFramework>net9.0</TargetFramework>
+        <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
     </PropertyGroup>
 
     <ItemGroup>
