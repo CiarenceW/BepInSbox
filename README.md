@@ -4,17 +4,13 @@
 
 # BepInS&x
 
-Bepis Injector for s&box
+Bepis Injector for standalone s&box
 
 ---
 
-BepInS&x is a fork of plugin / modding framework BepInEx 6, with added support for s&box.
-
----
+### BepInS&x is a fork of plugin / modding framework BepInEx 6, with added support for s&box.
 
 All Unity Mono/IL2CPP/XNA/FNA/MonoGame support has been stripped in order to simplify the codebase; this fork only supports s&box.  
-  
-Since s&box uses MonoMod and Mono.Cecil as well, this fork uses the same versions as s&box.  
   
 A barebones custom Doorstop implementation is also present, used to load a .NET host, which in turn is used to load BepInS&x.  
 
@@ -30,6 +26,8 @@ public class SamplePlugin : BaseSandboxPlugin
 	}
 }
 ```  
+  
+If you want your plugin to execute some code as soon as it's loaded by the chainloader, override the OnPluginLoad() method. This is the earliest possible entrypoint, outside of patchers. Be aware that due to how s&box loads scenes, any GameObject created during that time will get deleted.  
   
 The BepInPlugin attribute is always needed once for each BaseSandboxPlugin. It provides vital information such as:  
 - The name of the plugin (can be changed).  
