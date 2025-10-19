@@ -27,14 +27,14 @@ public class SamplePlugin : BaseSandboxPlugin
 }
 ```  
   
-If you want your plugin to execute some code as soon as it's loaded by the chainloader, override the OnPluginLoad() method. This is the earliest possible entrypoint, outside of patchers. Be aware that due to how s&box loads scenes, any GameObject created during that time will get deleted.  
+**If you want your plugin to execute some code as soon as it's loaded by the chainloader, override the OnPluginLoad() method**. This is the earliest possible entrypoint, outside of patchers. Be aware that due to how s&box loads scenes, any GameObject created during that time will get deleted.  
   
-The BepInPlugin attribute is always needed once for each BaseSandboxPlugin. It provides vital information such as:  
+The `BepInPlugin` attribute is always needed once for each `BaseSandboxPlugin`. It provides vital information such as:  
 - The name of the plugin (can be changed).  
 - The GUID of the plugin (shouldn't be changed), used for the config, as well as other plugins' dependencies.  
 - The version of the plugin, used for dependencies.  
   
-The BaseSandboxPlugin class is derived from Sandbox.Component, it is the core of your plugin, and provides 3 useful Properties:  
+The BaseSandboxPlugin class is derived from Sandbox.Component, it is the core of your plugin, and provides 3 useful properties:  
 - A `Logger`, use this to log things.  
 - A `Config`, you can use this to load and save custom configs without having to worry about loading.  
 - A `HarmonyInstance`, view [this](https://harmony.pardeike.net/articles/intro.html) and [that](https://github.com/BepInEx/HarmonyX/wiki) for more info.   
