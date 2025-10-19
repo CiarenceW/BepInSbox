@@ -64,15 +64,9 @@ namespace BepInEx.Core.Sbox
 
             var scene = Game.ActiveScene;
 
+            //Adds the scene reference to the GameObject, in turns allows all Components to have access to a Scene
             AccessTools.PropertySetter(typeof(GameObject), nameof(GameObject.Scene)).Invoke(ManagerObject, [ scene ]);
             ManagerObject.Parent = scene;
-
-            Logger.LogInfo($"impl count: {ImplementsOnUpdateComponentList.Count}");
-
-            foreach (var impl in ImplementsOnUpdateComponentList)
-            {
-                Logger.LogMessage($"in list: {impl.Name}");
-            }
 
             foreach (var component in ManagerObject.Components.GetAll()) 
             {
