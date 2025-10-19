@@ -45,10 +45,15 @@ namespace BepInEx.Core.Sbox
             Config = new ConfigFile(Utility.CombinePaths(Paths.ConfigPath, metadata.GUID + ".cfg"), false, metadata);
         }
 
+        internal void InternalLoad()
+        {
+            this.OnPluginLoad();
+        }
+
         /// <summary>
-        ///     If you create a new GameObject during this, mark it as <see cref="GameObjectFlags.DontDestroyOnLoad"/>, otherwise, it'll get destroyed. (see comment on NetChainloader.CreateManagerObjectAndInitialise() for an explanation)
+        ///     Called as soon as the plugin gets loaded, only use this if you need to do some patches very early in s&amp;box's loading process, as no scene will have been created yet
         /// </summary>
-        protected override void OnAwake() => base.OnAwake();
+        protected virtual void OnPluginLoad() {  }
 
         /// <summary>
         ///     Logger instance tied to this plugin.
