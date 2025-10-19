@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
@@ -38,13 +39,10 @@ namespace BepInEx.NET.Common
 
         private void CreateManagerObjectAndInitialise()
         {
-            //Create temporary scene, this is needed for our components to awake
-            AccessTools.PropertySetter(typeof(Game), nameof(Game.ActiveScene)).Invoke(null, [new Scene()]);
-
-            ManagerObject = new GameObject("BepInEx_Manager");
+            ManagerObject = new GameObject("BepInS&x_Manager");
             ManagerObject.Flags |= GameObjectFlags.DontDestroyOnLoad;
 
-            Logger.Log(LogLevel.Message, $"Active scene: {Game.ActiveScene}");
+            EngineHooks.ManagerObject = ManagerObject;
 
             base.Initialize();
 
@@ -55,7 +53,37 @@ namespace BepInEx.NET.Common
         {
             var type = pluginAssembly.GetType(pluginInfo.TypeName);
 
-            return (BaseSandboxPlugin)createComponent(ManagerObject.Components, type, true);
+            //We're looking for if the type has overriden the OnUpdate, OnFixedUpdate, or OnPreRender methods with those flags
+            var implementedFlags = BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic;
+
+            //go through all types in the assembly and check if they explicitely override those methods
+            foreach (var assemblyType in type.Assembly.GetTypes())
+            {
+                if (assemblyType.GetMethod("OnUpdate", implementedFlags) != null)
+                {
+                    Logger.Log(LogLevel.Debug, $"Type {assemblyType.Name} implements onUpdate");
+                    EngineHooks.ImplementsOnUpdateComponentList.Add(assemblyType);
+                }
+
+                if (assemblyType.GetMethod("OnFixedUpdate", implementedFlags) != null)
+                {
+                    Logger.Log(LogLevel.Debug, $"Type {assemblyType.Name} implements OnFixedUpdate");
+                    EngineHooks.ImplementsOnFixedUpdateComponentList.Add(assemblyType);
+                }
+
+                if (assemblyType.GetMethod("OnPreRender", implementedFlags) != null)
+                {
+                    Logger.Log(LogLevel.Debug, $"Type {assemblyType.Name} implements OnPreRender");
+                    EngineHooks.ImplementsOnPreRenderComponentList.Add(assemblyType);
+                }
+            }
+
+            var comp = (BaseSandboxPlugin)createComponent(ManagerObject.Components, type, true);
+
+            //calls the plugin's load method, if it has one
+            comp.InternalLoad();
+
+            return comp;
         }
 
         protected override void InitializeLoggers()
