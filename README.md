@@ -17,6 +17,9 @@ A barebones custom Doorstop implementation is also present, used to load a .NET 
 ## Writing plugins  
 A basic BepInS&x plugin looks like this:  
 ```CS
+using BepInEx;
+using BepInEx.Core.Sbox;
+
 [BepInPlugin("SamplePlugin", "ciarencew.SamplePlugin", "1.0.0")] //This is what the chainloader will look for to load a plugin, it won't load without it
 public class SamplePlugin : BaseSandboxPlugin
 {
