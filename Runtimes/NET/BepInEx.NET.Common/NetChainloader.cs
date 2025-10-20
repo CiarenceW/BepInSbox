@@ -39,12 +39,12 @@ namespace BepInEx.NET.Common
 
         private void CreateManagerObjectAndInitialise()
         {
+            base.Initialize();
+
             ManagerObject = new GameObject("BepInS&x_Manager");
             ManagerObject.Flags |= GameObjectFlags.DontDestroyOnLoad;
 
             EngineHooks.ManagerObject = ManagerObject;
-
-            base.Initialize();
 
             base.Execute();
         }
