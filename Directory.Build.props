@@ -6,6 +6,7 @@
         <Nullable>disable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <PackageLicenseExpression>LGPL-2.1-only</PackageLicenseExpression>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <DebugType>embedded</DebugType>
         <Configurations>Debug;Release</Configurations>
         <PackageProjectUrl>https://github.com/CiarenceW/BepInSbox</PackageProjectUrl>
