@@ -90,6 +90,10 @@ namespace BepInEx.NET.Common
         {
             base.InitializeLoggers();
 
+            Logger.Sources.Add(new BepInEx.Core.Sbox.Logging.SandboxLogSource());
+
+            Logger.Listeners.Add(new BepInEx.Core.Sbox.Logging.SandboxLogListener());
+
             ChainloaderLogHelper.RewritePreloaderLogs();
         }
     }
