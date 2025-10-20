@@ -14,6 +14,9 @@ All Unity Mono/IL2CPP/XNA/FNA/MonoGame support has been stripped in order to sim
   
 A barebones custom Doorstop implementation is also present, used to load a .NET host, which in turn is used to load BepInS&x.  
 
+## Installing  
+Extract the .zip to the game's root folder, nethost.dll and xinput1_4.dll should be next to the game's .exe, with the BepInEx folder's structure intact.  
+
 ## Writing plugins  
 A basic BepInS&x plugin looks like this:  
 ```CS
