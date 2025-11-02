@@ -116,7 +116,7 @@ void loadEntryPointMethod(load_assembly_and_get_function_pointer_fn load_assembl
 
 	std::wstring entrypointDllPath = std::filesystem::path(buffer).parent_path() / L"BepInSbox" / L"core" / L"BepInSbox.NET.CoreCLR.dll";
 
-	file << entrypointDllPath << std::endl;
+	file << "full path for entrypoint Dll: " << entrypointDllPath << std::endl;
 
 	//Name of [namespace (if there is one)].[class], [name of dll]
 	const wchar_t* dotnet_type = L"StartupHook, BepInSbox.NET.CoreCLR";
@@ -135,7 +135,7 @@ void loadEntryPointMethod(load_assembly_and_get_function_pointer_fn load_assembl
 		(void**)&bootstrap
 	);
 
-	file << std::hex << std::showbase << rc << std::endl;
+	file << "result code from load_assembly_and_get_function_pointer: " << std::hex << std::showbase << rc << std::endl;
 
 	if (debugWithMessageBoxes)
 	{
@@ -208,13 +208,13 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 
 		file.open("DoorstopLog.txt");
 
-		std::time_t result = 0;
-
         char str[26];
+
+        std::time_t result = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
 
         ctime_s(str, sizeof(str), &result);
 
-		file << result << std::endl;
+		file << str << std::endl;
 
 		if (!file.is_open())
 		{
@@ -233,7 +233,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 			return false;
 		}
 
-		file << size << std::endl;
+		file << "module filename: " << size << std::endl;
 
 		exePath = std::wstring(fuck);
 
@@ -246,7 +246,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 
 		std::filesystem::path path(exePath);
 
-		file << path.parent_path().wstring() << std::endl;
+		file << "game exe full path: " << path.parent_path().wstring() << std::endl;
 
         if (path.filename() == "sbox.exe")
         {
@@ -255,7 +255,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 
 		std::filesystem::path runtimeConfigPath = path.replace_filename(L"sbox-standalone.runtimeconfig.json");
 
-		file << runtimeConfigPath.wstring() << std::endl;
+		file << "runtime config full path: " << runtimeConfigPath.wstring() << std::endl;
 
 		initNetCore(runtimeConfigPath.wstring());
 
