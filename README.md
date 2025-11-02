@@ -1,4 +1,4 @@
-﻿<p align="center">
+<p align="center">
     <img src="assets/logos/logo.png">
 </p>
 
@@ -15,13 +15,13 @@ All Unity Mono/IL2CPP/XNA/FNA/MonoGame support has been stripped in order to sim
 A barebones custom Doorstop implementation is also present, used to load a .NET host, which in turn is used to load BepInS&x.  
 
 ## Installing  
-Extract the .zip to the game's root folder, nethost.dll and xinput1_4.dll should be next to the game's .exe, with the BepInEx folder's structure intact.  
+Extract the .zip to the game's root folder, nethost.dll and xinput1_4.dll should be next to the game's .exe, with the BepInSbox folder structure intact.  
 
 ## Writing plugins  
 A basic BepInS&x plugin looks like this:  
 ```CS
-using BepInEx;
-using BepInEx.Core.Sbox;
+using BepInSbox;
+using BepInSbox.Core.Sbox;
 
 [BepInPlugin("SamplePlugin", "ciarencew.SamplePlugin", "1.0.0")] //This is what the chainloader will look for to load a plugin, it won't load without it
 public class SamplePlugin : BaseSandboxPlugin
@@ -53,11 +53,14 @@ To build the Doorstop, just use VS2022 and build it from there :)
 
 ## Used libraries
 
+- [BepInEx/BepInEx](https://github.com/BepInEx/BepInEx) - v6.0.0-77e2ae481710cec52fe78c4954bc381532854dff (forked from)
 - [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) - v2.10.4
 - [MonoMod/MonoMod](https://github.com/MonoMod/MonoMod) - v25.0.8.0
 - [jbevain/cecil](https://github.com/jbevain/cecil) - v0.10.4
 - [dotnet/runtime](https://github.com/dotnet/runtime) - v9.0.9 (hostfxr, used by the Doorstop)
+- [ThirteenAG/Ultimate-ASI-Loader](https://github.com/ThirteenAG/Ultimate-ASI-Loader) - v9.0.0
 
 ## License
 
-The BepInS&x project is licensed under the LGPL-2.1 license.
+The BepInEx project is licensed under the LGPL-2.1 license.
+Any other additional changes licensed under the LGPL-2.1 license where applicable, unless explicitely noted.
