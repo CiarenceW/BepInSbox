@@ -114,12 +114,12 @@ void loadEntryPointMethod(load_assembly_and_get_function_pointer_fn load_assembl
 
 	GetModuleFileName(NULL, buffer, MAX_PATH);
 
-	std::wstring entrypointDllPath = std::filesystem::path(buffer).parent_path() / L"BepInEx" / L"core" / L"BepInEx.NET.CoreCLR.dll";
+	std::wstring entrypointDllPath = std::filesystem::path(buffer).parent_path() / L"BepInSbox" / L"core" / L"BepInSbox.NET.CoreCLR.dll";
 
 	file << entrypointDllPath << std::endl;
 
 	//Name of [namespace (if there is one)].[class], [name of dll]
-	const wchar_t* dotnet_type = L"StartupHook, BepInEx.NET.CoreCLR, Version=6.0.0.0, Culture=neutral, PublicKeyToken=null";
+	const wchar_t* dotnet_type = L"StartupHook, BepInSbox.NET.CoreCLR";
 
 	//Name of method
 	const wchar_t* dotnet_type_method = L"Initialize";

@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <Description>BepInS&amp;x support library for CoreCLR games</Description>
+        <OutputPath>$(BuildDir)/NET.CoreCLR</OutputPath>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+        <AppendTargetFrameworkToOutputPath>true</AppendTargetFrameworkToOutputPath>
+        <TargetFramework>net9.0</TargetFramework>
+        <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\BepInSbox.NET.Common\BepInSbox.NET.Common.csproj" />
+        <ProjectReference Include="..\..\..\BepInSbox.Preloader.Core\BepInSbox.Preloader.Core.csproj" />
+    </ItemGroup>
+
+    <Import Project="..\BepInSbox.NET.Shared\BepInSbox.NET.Shared.projitems" Label="Shared" />
+</Project>
