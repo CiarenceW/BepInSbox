@@ -63,4 +63,4 @@ To build the Doorstop, just use VS2022 and build it from there :)
 ## License
 
 The BepInEx project is licensed under the LGPL-2.1 license.  
-Any other additional changes licensed under the LGPL-2.1 license where applicable, unless explicitely noted.
+Any other additions licensed under the LGPL-2.1 license where applicable, unless explicitely noted.
