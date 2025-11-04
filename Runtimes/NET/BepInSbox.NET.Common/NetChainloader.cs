@@ -6,6 +6,7 @@ using BepInSbox.Logging;
 using BepInSbox.Preloader.Core.Logging;
 using HarmonyLib;
 using Sandbox;
+using Sandbox.Internal;
 
 namespace BepInSbox.NET.Common
 {
@@ -22,6 +23,12 @@ namespace BepInSbox.NET.Common
         //That method is just a shorthand for GameObject.ComponentList.Create<>, which actually exists in two other non-generic versions, one uses the internal whitelisted reflection library s&box uses called TypeLibrary
         //The other uses Type, but is internal, so we can only call it with reflections, I figured it'd be simpler and quicker to just get a delegate to this version, to avoid any problems that might arise from using TypeLibrary
         private static readonly CreateComponentDelegate ComponentList_CreateComponent = AccessTools.MethodDelegate<CreateComponentDelegate>(AccessTools.Method(typeof(ComponentList), nameof(ComponentList.Create), [ typeof(Type), typeof(bool) ]));
+
+        private delegate void AddAssemblyDelegate(TypeLibrary instance, Assembly incoming, bool isDynamic);
+
+        //as mentioned above, s&box has its own reflection library called TypeLibrary, it's mainly used for serialisation purposes, but it's safer for us to just add the modded types to that library
+        //to do that, we can call TypeLibrary.AddAssembly(Assembly, bool), if the bool is true, it'll add all types from the assembly
+        private static readonly AddAssemblyDelegate TypeLibrary_AddAssembly = AccessTools.MethodDelegate<AddAssemblyDelegate>(AccessTools.Method(typeof(TypeLibrary), "AddAssembly"));
 
         public override void Initialize()
         {
@@ -47,6 +54,8 @@ namespace BepInSbox.NET.Common
         public override BaseSandboxPlugin LoadPlugin(PluginInfo pluginInfo, Assembly pluginAssembly)
         {
             var type = pluginAssembly.GetType(pluginInfo.TypeName);
+
+            TypeLibrary_AddAssembly(Game.TypeLibrary, pluginAssembly, true);
 
             //We're looking for if the type has overriden the OnUpdate, OnFixedUpdate, or OnPreRender methods with those flags
             var implementedFlags = BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic;
