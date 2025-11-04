@@ -18,15 +18,37 @@
 #include "dllmain.h"
 #include <time.h>
 
+//for non windows systems, the path for folders and managed members' names will be UTF8, for windows it'll be regular UTF16
+#if defined(_WIN32)
+    //I hate C++ naming conventions
+    typedef std::wstring string_t;
+    #define STR(s) L ## s
+    #define DIR_SEPARATOR L'\\'
+    typedef std::wofstream output_stream;
+#else
+    #include <dlfcn.h>
+    #include <limits.h>
+
+    typedef std::string string_t;
+    #define STR(s) s
+    #define DIR_SEPARATOR '/'
+    #define MAX_PATH PATH_MAX
+    typedef std::ofstream output_stream;
+#endif
+
+
 HMODULE hm;
 
-std::wstring exePath;
+string_t exePath;
 
-const std::wstring dllName = L"XInput1_4";
+const string_t dllName = STR("XInput1_4");
 
-std::wofstream file;
+output_stream file;
 
+//I used a bunch of MessageBoxes when I was making this to debug and make sure everything worked fine and stuff
 constexpr bool debugWithMessageBoxes = false;
+
+//most of the following is from https://learn.microsoft.com/en-us/dotnet/core/tutorials/netcore-hosting, and https://github.com/dotnet/samples/blob/main/core/hosting/src/NativeHost/nativehost.cpp
 
 // Globals to hold hostfxr exports
 hostfxr_initialize_for_dotnet_command_line_fn init_for_cmd_line_fptr;
@@ -43,6 +65,7 @@ void* load_library(const char_t* path)
 	assert(h != nullptr);
 	return (void*)h;
 }
+
 void* get_export(void* h, const char* name)
 {
 	void* f = ::GetProcAddress((HMODULE)h, name);
@@ -89,14 +112,15 @@ load_assembly_and_get_function_pointer_fn get_dotnet_load_assembly(const char_t*
 		return nullptr;
 	}
 
+#if defined (_WIN32)
 	if (debugWithMessageBoxes)
 	{
 		MessageBox(0, std::to_wstring(rc).c_str(), L"MADE IT!!!!", MB_ICONASTERISK);
 	}
+#endif
 
-	file << "HostFXR Context Handle: " << std::hex << std::showbase << (unsigned long long)cxt << std::endl;
+	file << "HostFXR Context Handle: " << std::hex << std::showbase << (size_t)cxt << std::endl;
 
-	//No loads refused
 	rc = get_delegate_fptr(cxt, hdt_load_assembly_and_get_function_pointer, &load_assembly_and_get_function_pointer);
 
 	if (rc != 0 || load_assembly_and_get_function_pointer == nullptr)
@@ -110,19 +134,19 @@ load_assembly_and_get_function_pointer_fn get_dotnet_load_assembly(const char_t*
 
 void loadEntryPointMethod(load_assembly_and_get_function_pointer_fn load_assembly_and_get_function_pointer)
 {
-	wchar_t buffer[MAX_PATH] = { 0 };
+	char_t buffer[MAX_PATH] = { 0 };
 
 	GetModuleFileName(NULL, buffer, MAX_PATH);
 
-	std::wstring entrypointDllPath = std::filesystem::path(buffer).parent_path() / L"BepInSbox" / L"core" / L"BepInSbox.NET.CoreCLR.dll";
+	string_t entrypointDllPath = std::filesystem::path(buffer).parent_path() / STR("BepInSbox") / STR("core") / STR("BepInSbox.NET.CoreCLR.dll");
 
 	file << "full path for entrypoint Dll: " << entrypointDllPath << std::endl;
 
 	//Name of [namespace (if there is one)].[class], [name of dll]
-	const wchar_t* dotnet_type = L"StartupHook, BepInSbox.NET.CoreCLR";
+	const char_t* dotnet_type = STR("StartupHook, BepInSbox.NET.CoreCLR");
 
 	//Name of method
-	const wchar_t* dotnet_type_method = L"Initialize";
+	const char_t* dotnet_type_method = STR("Initialize");
 
 	component_entry_point_fn bootstrap = nullptr;
 
@@ -137,11 +161,13 @@ void loadEntryPointMethod(load_assembly_and_get_function_pointer_fn load_assembl
 
 	file << "result code from load_assembly_and_get_function_pointer: " << std::hex << std::showbase << rc << std::endl;
 
+#if defined (_WIN32)
 	if (debugWithMessageBoxes)
 	{
 		MessageBox(0, std::to_wstring(rc).c_str(), L"RC", MB_ICONASTERISK);
-		MessageBox(0, std::to_wstring((unsigned long long)bootstrap).c_str(), L"bootstrap", MB_ICONASTERISK);
+		MessageBox(0, std::to_wstring((size_t)bootstrap).c_str(), L"bootstrap", MB_ICONASTERISK);
 	}
+#endif
 
 	if (rc == 0 && bootstrap != nullptr)
 	{
@@ -152,19 +178,23 @@ void loadEntryPointMethod(load_assembly_and_get_function_pointer_fn load_assembl
 
 void initNetCore(const std::wstring config_path)
 {
+#if defined (_WIN32)
 	if (debugWithMessageBoxes)
 	{
 		MessageBox(0, TEXT("FROM INIT NET CORE"), TEXT("HI"), MB_ICONEXCLAMATION);
 	}
+#endif
 
 	if (!load_hostfxr())
 	{
 		file << "failed to load host fxr :(" << std::endl;
 
+#if defined (_WIN32)
 		if (debugWithMessageBoxes)
 		{
-			MessageBox(0, TEXT("Failed"), TEXT("FAILED TO LOAD HOST FXR FUCKKKKKKKKKKKKKK"), MB_ICONERROR);
+			MessageBox(0, TEXT("Failed"), TEXT("FAILED TO LOAD HOST FXR"), MB_ICONERROR);
 		}
+#endif
 
 		return;
 	}
@@ -173,14 +203,17 @@ void initNetCore(const std::wstring config_path)
 
 	load_assembly_and_get_function_pointer = get_dotnet_load_assembly(config_path.c_str());
 
+#if defined (_WIN32)
 	if (debugWithMessageBoxes)
 	{
 		MessageBox(0, std::to_wstring(load_assembly_and_get_function_pointer == nullptr).c_str(), L"Hi", MB_ICONASTERISK);
 	}
+#endif
 
 	loadEntryPointMethod(load_assembly_and_get_function_pointer);
 }
 
+#if defined (_WIN32)
 BOOL APIENTRY DllMain(HMODULE hModule,
 	DWORD  ul_reason_for_call,
 	LPVOID lpReserved
@@ -200,9 +233,9 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 			return false;
 		}
 
-		std::wstring dllPath{ pString };
+		string_t dllPath{ pString };
 
-		dllPath += L'\\' + dllName + L".dll";
+		dllPath += DIR_SEPARATOR + dllName + STR(".dll");
 
 		xinput.LoadOriginalLibrary(LoadLibrary(dllPath.c_str()));
 
@@ -218,7 +251,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 
 		if (!file.is_open())
 		{
-			std::cout << "FUCK FILE DIDN'T CREATE" << std::endl;
+			std::cout << "Couldn't create log file" << std::endl;
 			return false;
 		}
 
@@ -226,18 +259,18 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 
 		size_t size = 0;
 
-		wchar_t fuck[MAX_PATH];
+		char_t fuck[MAX_PATH];
 
 		if (FAILED(size = (GetModuleFileName(NULL, (LPWSTR)fuck, MAX_PATH))))
 		{
 			return false;
 		}
 
-		file << "module filename: " << size << std::endl;
-
-		exePath = std::wstring(fuck);
+		exePath = string_t(fuck);
 
 		exePath.resize(size);
+
+		file << "module filename: " << exePath << std::endl;
 
 		if (debugWithMessageBoxes)
 		{
@@ -250,7 +283,11 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 
         if (path.filename() == "sbox.exe")
         {
+#if defined (_WIN32)
             MessageBox(0, L"Trying to use this with the real s&box? booooooooooooooooooooooooooooooooo", L"I'm cross at you", MB_ICONERROR | MB_OKCANCEL);
+#endif
+
+            return false;
         }
 
 		std::filesystem::path runtimeConfigPath = path.replace_filename(L"sbox-standalone.runtimeconfig.json");
@@ -269,6 +306,8 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 		{
 			MessageBox(0, TEXT("byee byereeee"), TEXT("Goodbye!!!!!!"), MB_ICONINFORMATION);
 		}
+
+        file << "process detached, goodbye" << std::endl;
 
 		return true;
 	}
@@ -293,3 +332,4 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 
 	return true;
 }
+#endif
