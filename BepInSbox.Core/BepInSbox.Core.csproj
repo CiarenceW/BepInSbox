@@ -8,6 +8,7 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
         <PackageReference Include="HarmonyX" Version="2.14.0" />
+        <PackageReference Include="Mono.Cecil" Version="0.11.6" />
         <PackageReference Include="MonoMod.RuntimeDetour" Version="25.2.3" />
         <PackageReference Include="SemanticVersioning" Version="2.0.2" />
         <PackageReference Include="MonoMod.Utils" Version="25.0.8" />
@@ -58,16 +59,9 @@
             <HintPath>$(FACEPUNCH_ENGINE)\bin\managed\Sandbox.System.dll</HintPath>
             <Private>False</Private>
         </Reference>
+        <Reference Include="Sandbox.FileSystem">
+            <HintPath>$(FACEPUNCH_ENGINE)\bin\managed\Sandbox.FileSystem.dll</HintPath>
+            <Private>False</Private>
+        </Reference>
     </ItemGroup>
-
-    <!-- CopyLocalLockFileAssemblies causes to also output shared assemblies: https://github.com/NuGet/Home/issues/4837#issuecomment-354536302 -->
-    <!-- Since all core assemblies usually follow naming of System.*, we just delete them for now -->
-    <!-- Also delete deps.json as they are not used by mono -->
-    <Target Name="DeleteSys" AfterTargets="Build">
-        <ItemGroup>
-            <FilesToDelete Include="$(OutputPath)System.*.dll" />
-            <FilesToDelete Include="$(OutputPath)Sandbox.*.dll" />
-        </ItemGroup>
-        <Delete Files="@(FilesToDelete)" />
-    </Target>
 </Project>

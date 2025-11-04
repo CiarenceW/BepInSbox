@@ -16,11 +16,23 @@
         <BuildDir>$(SolutionDir)bin</BuildDir>
         <PackageOutputPath>$(BuildDir)/NuGet</PackageOutputPath>
         <PackageIcon>logo.png</PackageIcon>
+		<OutDir>$(MSBuildThisFileDirectory)\bin\$(Configuration)</OutDir>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     </PropertyGroup>
     <ItemGroup>
         <None Include="$(SolutionDir)\assets\logos\logo.png" Pack="true" Visible="false" PackagePath=""/>
     </ItemGroup>
+
+    <Target Name="DeleteSys" AfterTargets="Build">
+        <ItemGroup>
+			<!-- Possibly shooting myself in the foot, but I don't think this is required for us, I think we include all the needed dependencies -->
+			<FilesToDelete Include="$(OutDir)*.deps.json"/>
+			
+			<!-- Remove all Mono.Cecil and MonoMod dlls, they're already used by the game -->
+            <FilesToDelete Include="$(OutDir)Mono*.dll"/>
+        </ItemGroup>
+        <Delete Files="@(FilesToDelete)" />
+    </Target>
 </Project>
