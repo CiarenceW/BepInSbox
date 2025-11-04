@@ -43,6 +43,17 @@ namespace BepInSbox.NET.Common
         {
             base.Initialize();
 
+            //if we want s&box (and mainly Source 2) to recognise assets, and make them loadable, we need to mount them to the file system
+            //calling the EngineFileSystem.AddAssetPath() method is the best way for us to do that, it creates a path in Source 2 and s&box at the same time, so shaders and materials can be loaded
+            //PROBLEM: for a plugin with resources located in a path like this: plugins/awesomeplugin/assets/awesomeshader.shader_c
+            //anytime a plugin will want to load the awesomeshader.shader_c file, it'll have to type out the whole path: Shader.Load("awesomeplugin/assets/awesomeshader")
+            //kinda annoying, but considering we might be loaded by R2ModMan/Gale, which loves to flatten folder structure, this'll be a problem
+            //you can prevent flattening by explicitely packaging your mod like specified here https://wiki.thunderstore.io/mods/packaging-your-mods, but it still kinda sucks? idk
+            //(also as I'm speaking now I have absolutely not contacted thunderstore about this at all, but it also seems that each game needs to have which paths to preserve configured manually)
+            //if we instead "mount" each plugin at their root like the method just below, there'll still be the problem of assets being in a subfolder, which, again, would get flattened by R2ModMan/Gale
+            AccessTools.Method(AccessTools.TypeByName("Sandbox.EngineFileSystem"), "AddAssetPath").Invoke(null, ["bepins&x-plugins", Paths.PluginPath]);
+            AccessTools.Method(AccessTools.TypeByName("Sandbox.EngineFileSystem"), "AddAssetPath").Invoke(null, ["bepins&x-patchers", Paths.PatcherPluginPath]);
+
             ManagerObject = new GameObject("BepInS&x_Manager");
             ManagerObject.Flags |= GameObjectFlags.DontDestroyOnLoad;
 
