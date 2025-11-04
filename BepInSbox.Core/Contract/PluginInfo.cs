@@ -8,7 +8,7 @@ namespace BepInSbox;
 
 /// <summary>
 ///     Data class that represents information about a loadable BepInSbox plugin.
-///     Contains all metadata and additional info required for plugin loading by <see cref="Chainloader" />.
+///     Contains all metadata and additional info required for plugin loading by <see cref="BaseChainloader{TPlugin}" />.
 /// </summary>
 public class PluginInfo : ICacheable
 {

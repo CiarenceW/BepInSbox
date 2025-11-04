@@ -138,7 +138,7 @@ public class BepInDependency : Attribute, ICacheable
     public DependencyFlags Flags { get; protected set; }
 
     /// <summary>
-    ///     The version <see cref="SemVer.Range">range</see> of the referenced plugin.
+    ///     The version <see cref="SemanticVersioning.Range">range</see> of the referenced plugin.
     /// </summary>
     public Range VersionRange { get; protected set; }
 

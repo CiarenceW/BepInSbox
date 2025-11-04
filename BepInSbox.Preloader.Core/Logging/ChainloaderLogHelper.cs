@@ -35,7 +35,7 @@ public static class ChainloaderLogHelper
 
     public static void PrintLogInfo(ManualLogSource log)
     {
-        var bepinVersion = Paths.BepInSboxVersion;
+        SemanticVersioning.Version bepinVersion = Utility.BepInSboxVersion;
         var versionMini = new SemanticVersioning.Version(bepinVersion.Major, bepinVersion.Minor, bepinVersion.Patch,
                                                          bepinVersion.PreRelease);
         var consoleTitle = $"BepInS&x {versionMini} - {Paths.ProcessName}";
@@ -49,7 +49,8 @@ public static class ChainloaderLogHelper
 
         Logger.Log(LogLevel.Info, $"System platform: {GetPlatformString()}");
         Logger.Log(LogLevel.Info,
-                   $"Process bitness: {(PlatformUtils.ProcessIs64Bit ? "64-bit (x64)" : "32-bit (x86)")}");
+                   //bepinsbox: unneeded (for now, at least), sbox is 64bit only, but it's cute so I'm leaving it in
+                   $"Process bitness: {(Environment.Is64BitProcess ? "64-bit (x64)" : "32-bit (x86)")}");
     }
 
     private static string GetPlatformString()

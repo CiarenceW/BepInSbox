@@ -70,7 +70,7 @@ namespace BepInSbox.Core.Sbox
         ///     Your very own Harmony Instance, use this to patch your own stuff, instead of <see cref="Harmony.CreateAndPatchAll(Type, string)"/>
         /// </summary>
         //Shouldn't this be private? whatever
-        public Harmony HarmonyInstance { get; protected set; }
+        public Harmony HarmonyInstance { get; }
 
         /// <summary>
         ///     Information about this plugin as it was loaded.

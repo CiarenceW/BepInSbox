@@ -23,7 +23,6 @@ namespace BepInSbox.NET.Common
         //The other uses Type, but is internal, so we can only call it with reflections, I figured it'd be simpler and quicker to just get a delegate to this version, to avoid any problems that might arise from using TypeLibrary
         private static CreateComponentDelegate createComponent = AccessTools.MethodDelegate<CreateComponentDelegate>(AccessTools.Method(typeof(ComponentList), nameof(ComponentList.Create), [ typeof(Type), typeof(bool) ]));
 
-        public override void Initialize(string gameExePath = null)
         {
             Instance = this;
 

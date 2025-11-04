@@ -12,24 +12,6 @@ namespace BepInSbox;
 
 internal class WindowsConsoleDriver : IConsoleDriver
 {
-    // Apparently on some versions of Unity (e.g. 2018.4) using old mono causes crashes on game close if
-    // IntPtr overload is used for file streams (check #139).
-    // On the other hand, not all Unity games come with SafeFileHandle overload for FileStream
-    // As such, we're trying to use SafeFileHandle when it's available and go back to IntPtr overload if not available
-    private static readonly ConstructorInfo FileStreamCtor = new[]
-    {
-        AccessTools.Constructor(typeof(FileStream), new[] { typeof(SafeFileHandle), typeof(FileAccess) }),
-        AccessTools.Constructor(typeof(FileStream), new[] { typeof(IntPtr), typeof(FileAccess) })
-    }.FirstOrDefault(m => m != null);
-
-    private readonly Func<int> getWindowHeight = AccessTools
-                                                 .PropertyGetter(typeof(Console), nameof(Console.WindowHeight))
-                                                 ?.CreateDelegate<Func<int>>();
-
-    private readonly Func<int> getWindowWidth = AccessTools
-                                                .PropertyGetter(typeof(Console), nameof(Console.WindowWidth))
-                                                ?.CreateDelegate<Func<int>>();
-
     private bool useManagedEncoder;
 
     private int ConsoleWidth
@@ -38,7 +20,7 @@ internal class WindowsConsoleDriver : IConsoleDriver
         {
             try
             {
-                return getWindowWidth?.Invoke() ?? 0;
+                return Console.WindowWidth;
             }
             catch (IOException)
             {
@@ -53,7 +35,7 @@ internal class WindowsConsoleDriver : IConsoleDriver
         {
             try
             {
-                return getWindowHeight?.Invoke() ?? 0;
+                return Console.WindowHeight;
             }
             catch (IOException)
             {
@@ -76,6 +58,7 @@ internal class WindowsConsoleDriver : IConsoleDriver
         if (ConsoleActive)
         {
             // We're in a .NET framework / XNA environment; console *is* stdout
+            //bepinsbox: I think this is still the case for .NET Core?
             ConsoleOut = Console.Out;
             StandardOut = new StreamWriter(Console.OpenStandardOutput());
         }
@@ -143,23 +126,10 @@ internal class WindowsConsoleDriver : IConsoleDriver
 
     private static Stream OpenFileStream(IntPtr handle)
     {
-        //useless :3
-        if (PlatformDetection.Corelib == CorelibKind.Core)
-        {
-            var windowsConsoleStreamType = Type.GetType("System.ConsolePal+WindowsConsoleStream, System.Console", true);
-            var constructor = AccessTools.Constructor(windowsConsoleStreamType,
-                                                      new[] { typeof(IntPtr), typeof(FileAccess), typeof(bool) });
-            return (Stream)constructor.Invoke(new object[] { handle, FileAccess.Write, true });
-        }
-
-        var fileHandle = new SafeFileHandle(handle, false);
-        var ctorParams = AccessTools.ActualParameters(FileStreamCtor,
-                                                      new object[]
-                                                      {
-                                                          fileHandle, fileHandle.DangerousGetHandle(),
-                                                          FileAccess.Write
-                                                      });
-        return (FileStream) Activator.CreateInstance(typeof(FileStream), ctorParams);
+        var windowsConsoleStreamType = Type.GetType("System.ConsolePal+WindowsConsoleStream, System.Console", true);
+        var constructor = AccessTools.Constructor(windowsConsoleStreamType,
+                                                  new[] { typeof(IntPtr), typeof(FileAccess), typeof(bool) });
+        return (Stream)constructor.Invoke(new object[] { handle, FileAccess.Write, true });
     }
 
     private IntPtr GetOutHandle()

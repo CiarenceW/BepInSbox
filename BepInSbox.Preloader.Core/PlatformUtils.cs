@@ -8,7 +8,6 @@ namespace BepInSbox.Preloader.Core;
 
 public static class PlatformUtils
 {
-    public static readonly bool ProcessIs64Bit = IntPtr.Size >= 8;
     public static Version WindowsVersion { get; set; }
     public static string WineVersion { get; set; }
 

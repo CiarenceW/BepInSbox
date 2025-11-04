@@ -112,7 +112,7 @@ public abstract class BaseChainloader<TPlugin>
 
     #region Contract
 
-    protected virtual string ConsoleTitle => $"BepInSbox {Paths.BepInSboxVersion} - {Paths.ProcessName}";
+    protected virtual string ConsoleTitle => $"BepInSbox {Utility.BepInSboxVersion} - {Paths.ProcessName}";
 
     private bool _initialized;
 
@@ -137,16 +137,10 @@ public abstract class BaseChainloader<TPlugin>
     /// </summary>
     public event Action Finished;
 
-    public virtual void Initialize(string gameExePath = null)
+    public virtual void Initialize()
     {
         if (_initialized)
             throw new InvalidOperationException("Chainloader cannot be initialized multiple times");
-
-        // Set vitals
-        if (gameExePath != null && string.IsNullOrEmpty(Paths.ExecutablePath))
-            // Checking for null allows a more advanced initialization workflow, where the Paths class has been initialized before calling Chainloader.Initialize
-            // This is used by Preloader to use environment variables, for example
-            Paths.SetExecutablePath(gameExePath);
 
         InitializeLoggers();
 
