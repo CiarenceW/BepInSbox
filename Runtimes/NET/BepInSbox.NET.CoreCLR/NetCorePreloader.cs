@@ -10,6 +10,7 @@ using BepInSbox.NET.Common;
 using BepInSbox.Preloader.Core;
 using BepInSbox.Preloader.Core.Logging;
 using BepInSbox.Preloader.Core.Patching;
+using BepInSbox.Preloader.RuntimeFixes;
 using HarmonyLib;
 using Mono.Cecil;
 
@@ -21,6 +22,9 @@ namespace BepInSbox.NET.CoreCLR
 
         public static void Start()
         {
+            HarmonyBackendFix.Initialize();
+            ConsoleSetOutFix.Apply();
+
             var preloaderListener = new PreloaderConsoleListener();
             Logger.Listeners.Add(preloaderListener);
 
