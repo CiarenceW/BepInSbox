@@ -18,11 +18,12 @@ namespace BepInSbox.NET.Common
 
         private delegate Component CreateComponentDelegate(ComponentList instance, Type type, bool startEnabled = true);
 
-        //in Sbox you'd usually create a new component on a GameObject by calling GameObject.AddComponent<>, which we can't use because it's a generic method
-        //That method is just a shorthand for GameObject.ComponentList.Create<>, which actually exists in two other non-generic versions, one uses the internal whitelisted reflection library sbox uses called TypeLibrary
+        //in s&box you'd usually create a new component on a GameObject by calling GameObject.AddComponent<>, which we can't use because it's a generic method
+        //That method is just a shorthand for GameObject.ComponentList.Create<>, which actually exists in two other non-generic versions, one uses the internal whitelisted reflection library s&box uses called TypeLibrary
         //The other uses Type, but is internal, so we can only call it with reflections, I figured it'd be simpler and quicker to just get a delegate to this version, to avoid any problems that might arise from using TypeLibrary
-        private static CreateComponentDelegate createComponent = AccessTools.MethodDelegate<CreateComponentDelegate>(AccessTools.Method(typeof(ComponentList), nameof(ComponentList.Create), [ typeof(Type), typeof(bool) ]));
+        private static readonly CreateComponentDelegate ComponentList_CreateComponent = AccessTools.MethodDelegate<CreateComponentDelegate>(AccessTools.Method(typeof(ComponentList), nameof(ComponentList.Create), [ typeof(Type), typeof(bool) ]));
 
+        public override void Initialize()
         {
             Instance = this;
 
@@ -72,7 +73,7 @@ namespace BepInSbox.NET.Common
                 }
             }
 
-            var comp = (BaseSandboxPlugin)createComponent(ManagerObject.Components, type, true);
+            var comp = (BaseSandboxPlugin)ComponentList_CreateComponent(ManagerObject.Components, type, true);
 
             //calls the plugin's load method, if it has one
             comp.InternalLoad();
