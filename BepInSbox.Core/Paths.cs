@@ -11,14 +11,6 @@ namespace BepInSbox;
 /// </summary>
 public static class Paths
 {
-    // TODO: Why is this in Paths?
-    /// <summary>
-    ///    BepInS&amp;x version.
-    /// </summary>
-    public static Version BepInSboxVersion { get; } =
-        Version.Parse(MetadataHelper.GetAttributes<AssemblyInformationalVersionAttribute>(typeof(Paths).Assembly)[0]
-                                    .InformationalVersion);
-
     /// <summary>
     ///     The path to the Managed folder that contains the main managed assemblies.
     /// </summary>

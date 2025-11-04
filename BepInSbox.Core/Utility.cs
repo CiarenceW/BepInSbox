@@ -30,6 +30,16 @@ public static class Utility
     /// </summary>
     public static Encoding UTF8NoBom { get; } = new UTF8Encoding(false);
 
+    /// <summary>
+    ///    BepInS&amp;x version.
+    /// </summary>
+    public static SemanticVersioning.Version BepInSboxVersion
+    {
+        get;
+    } =
+        SemanticVersioning.Version.Parse(MetadataHelper.GetAttributes<AssemblyInformationalVersionAttribute>(typeof(Paths).Assembly)[0]
+                                    .InformationalVersion);
+
     public static T AsDelegate<T>(this nint s) where T : class
     {
         return Marshal.GetDelegateForFunctionPointer(s, typeof(T)) as T;
@@ -111,18 +121,12 @@ public static class Utility
         bool.TryParse(input, out var result) ? result : defaultValue;
 
     /// <summary>
-    ///     Converts a file path into a UnityEngine.WWW format.
-    /// </summary>
-    /// <param name="path">The file path to convert.</param>
-    /// <returns>A converted file path.</returns>
-    public static string ConvertToWWWFormat(string path) => $"file://{path.Replace('\\', '/')}";
-
-    /// <summary>
     ///     Indicates whether a specified string is null, empty, or consists only of white-space characters.
     /// </summary>
     /// <param name="self">The string to test.</param>
     /// <returns>True if the value parameter is null or empty, or if value consists exclusively of white-space characters.</returns>
-    public static bool IsNullOrWhiteSpace(this string self) => self == null || self.All(char.IsWhiteSpace);
+    //bepinsbox: I think this was originally there for older .net versions that didn't have it, but I'm keeping because now we can directly call str.IsNullOrWhiteSpace() on a string and have it without having to write string.IsNullOrWhiteSpace(str)
+    public static bool IsNullOrWhiteSpace(this string self) => string.IsNullOrWhiteSpace(self);
 
     /// <summary>
     ///     Sorts a given dependency graph using a direct toposort, reporting possible cyclic dependencies.
@@ -372,6 +376,7 @@ public static class Utility
         return null;
     }
 
+#warning TODO: is this needed?
     /// <summary>
     ///     Try to parse given string as an assembly name
     /// </summary>
