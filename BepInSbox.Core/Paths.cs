@@ -91,7 +91,7 @@ public static class Paths
     /// <summary>
     ///     List of directories from where Mono will search assemblies before assembly resolving is invoked.
     /// </summary>
-    //Don't think this is relevant here :)
+    //bepinsbox: Don't think this is relevant here :)
     public static string[] DllSearchPaths { get; private set; }
 
     public static void SetExecutablePath(string executablePath,
@@ -124,10 +124,10 @@ public static class Paths
 
         ManagedPath = managedPath ?? Path.Combine(GameRootPath, "bin", "managed");
 
-        //Initially I wanted those to be called the proper name of this fork, i.e. BepInS&x,
-        //from the two minutes of research I did, it seems that most OSes can handle ampersands in file/directory names,
-        //but in case some user is running this from a weird ass Linux distro with a weirder ass File System that doesn't support UTF-8 for file names, better to be safe than sorry.
-        //this seemingly is also what s&box has opted to do, as all paths/files are either called "Sandbox" or "sbox"
+        //bepinsbox: Initially I wanted those to be called the proper name of this fork, i.e. BepInS&x,
+        //bepinsbox: from the two minutes of research I did, it seems that most OSes can handle ampersands in file/directory names,
+        //bepinsbox: but in case some user is running this from a weird ass Linux distro with a weirder ass File System that doesn't support UTF-8 for file names, better to be safe than sorry.
+        //bepinsbox: this seemingly is also what s&box has opted to do, as all paths/files are either called "Sandbox" or "sbox"
         BepInSboxRootPath = bepinRootPath ?? Path.Combine(GameRootPath, "BepInSbox");
         ConfigPath = Path.Combine(BepInSboxRootPath, "config");
         BepInSboxConfigPath = Path.Combine(ConfigPath, "BepInSbox.cfg");

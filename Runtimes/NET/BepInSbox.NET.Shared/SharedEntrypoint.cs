@@ -23,8 +23,8 @@ namespace BepInSbox.NET.Shared
                                                       AssemblyName assemblyName,
                                                       List<string> resolveDirectories)
         {
-            //AppDomain seemingly lists all loaded assemblies, including BepInSbox, which doesn't reside in AssemblyLoadContext.Default, but instead in IsolatedComponentLoadContext, maybe because we're loaded from HostFXR?
-            //Regardless, this is how we resolve the plugins' reference to us, prevents BepInSbox.Core, Harmony, and SemanticVersioning from being loaded twice and not being assignable between eachother
+            //bepinsbox: AppDomain seemingly lists all loaded assemblies, including BepInSbox, which doesn't reside in AssemblyLoadContext.Default, but instead in IsolatedComponentLoadContext, maybe because we're loaded from HostFXR?
+            //bepinsbox: Regardless, this is how we resolve the plugins' reference to us; Prevents BepInSbox.Core, Harmony, and SemanticVersioning from being loaded twice and the duplicated assemblies' members not being assignable to the original ones
             foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
             {
                 if (assembly.GetName().Name == assemblyName.Name && assembly.GetName().Version >= assemblyName.Version)
