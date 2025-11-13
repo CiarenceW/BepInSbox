@@ -16,7 +16,7 @@
         <BuildDir>$(SolutionDir)bin</BuildDir>
         <PackageOutputPath>$(BuildDir)/NuGet</PackageOutputPath>
         <PackageIcon>logo.png</PackageIcon>
-		<OutDir>$(MSBuildThisFileDirectory)\bin\$(Configuration)</OutDir>
+		<OutDir>$(MSBuildThisFileDirectory)\bin\$(Configuration)\latest</OutDir>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -34,5 +34,14 @@
             <FilesToDelete Include="$(OutDir)Mono*.dll"/>
         </ItemGroup>
         <Delete Files="@(FilesToDelete)" />
+    </Target>
+	
+
+
+    <Target Name="ZipOutputPath" AfterTargets="Build">
+        <ZipDirectory
+            SourceDirectory="$(MSBuildThisFileDirectory)\bin\$(Configuration)\latest"
+            Overwrite="true"
+            DestinationFile="$(SolutionDir)\packages\BepInSbox-$(VersionPrefix).zip" />
     </Target>
 </Project>
