@@ -92,10 +92,24 @@ bool load_hostfxr()
 
 load_assembly_and_get_function_pointer_fn get_dotnet_load_assembly(const char_t* config_path)
 {
-	//Load .NET Core
+    int rc = 0;
+
 	void* load_assembly_and_get_function_pointer = nullptr;
 
-	int rc = init_for_config_fptr(config_path, nullptr, &cxt);
+    //we don't have to pass a context handle, if there's already a running host, it'll automagically use its context pointer on its own
+    rc = get_delegate_fptr(nullptr, hdt_load_assembly_and_get_function_pointer, &load_assembly_and_get_function_pointer);
+
+    //if the status code is >= 0, success, we in business, otherwise, we have to initialise the host ourselves
+    if (rc >= 0)
+    {
+        file << "skipping initialising host, there's already one running" << std::endl;
+
+        return (load_assembly_and_get_function_pointer_fn)load_assembly_and_get_function_pointer;
+    }
+
+    hostfxr_handle cxt = nullptr;
+
+	rc = init_for_config_fptr(config_path, nullptr, &cxt);
 
 	//According to https://github.com/dotnet/runtime/blob/main/docs/design/features/host-error-codes.md, all returned codes below 0 are errors, and ones above are successes
 	//We actually should get code 1, which means that another host is already loaded, but is compatible with ours, thus we basically get the handle to the host that the game uses
