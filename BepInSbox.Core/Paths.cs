@@ -88,8 +88,6 @@ public static class Paths
 
     public static void SetExecutablePath(string executablePath,
                                          string bepinRootPath = null,
-                                         string managedPath = null,
-                                         bool gameDataRelativeToManaged = false,
                                          string[] dllSearchPath = null)
     {
         ExecutablePath = executablePath;
@@ -99,22 +97,9 @@ public static class Paths
                            ? Utility.ParentDirectory(executablePath, 4)
                            : Path.GetDirectoryName(executablePath);
 
-        if (managedPath != null && gameDataRelativeToManaged)
-        {
-            AssetsPath = Path.GetDirectoryName(managedPath);
-        }
-        else
-        {
-            // According to some experiments, Unity checks whether globalgamemanagers/data.unity3d exists in the data folder before picking it.
-            // 'ProcessName_Data' folder is checked first, then if that fails 'Data' folder is checked. If neither is valid, the player crashes.
-            // A simple Directory.Exists check is accurate enough while being less likely to break in case these conditions change.
-            AssetsPath = Path.Combine(GameRootPath, $"assets");
-        }
-        
-        if (string.IsNullOrEmpty(AssetsPath) || !Directory.Exists(AssetsPath))
-            throw new DirectoryNotFoundException($"Failed to extract valid GameDataPath {AssetsPath} from executablePath: {executablePath}");
+        AssetsPath = Path.Combine(GameRootPath, $"assets");
 
-        ManagedPath = managedPath ?? Path.Combine(GameRootPath, "bin", "managed");
+        ManagedPath = Path.Combine(GameRootPath, "bin", "managed");
 
         //bepinsbox: Initially I wanted those to be called the proper name of this fork, i.e. BepInS&x,
         //bepinsbox: from the two minutes of research I did, it seems that most OSes can handle ampersands in file/directory names,
