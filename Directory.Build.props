@@ -1,6 +1,6 @@
 <Project>
     <PropertyGroup>
-        <VersionPrefix>1.1.0</VersionPrefix>
+        <VersionPrefix>1.2.0</VersionPrefix>
         <Authors>BepInEx (Original) CiarenceW (fork)</Authors>
         <LangVersion>latest</LangVersion>
         <Nullable>disable</Nullable>
