@@ -7,6 +7,7 @@ using System.Reflection;
 using BepInSbox.Logging;
 using System.Reflection.Emit;
 using static System.Reflection.Emit.OpCodes;
+using Sandbox.Engine;
 
 //if we call it "Sandbox" it'll be annoying anytime we want to call anything in the actual Sandbox namespace
 #pragma warning disable IDE0130 // Namespace does not match folder structure
@@ -49,6 +50,21 @@ namespace BepInSbox.Core.Sbox
             HarmonyInstance.Patch(openStartupSceneMethod, postfix: new HarmonyMethod(PatchOpenStartupScene));
 
             HarmonyInstance.PatchAll(typeof(ComponentUpdateFix));
+
+            //don't have to bother if we're standalone, it's already not initialising
+            if (!Application.IsStandalone)
+            {
+                var errorReporterType = AccessTools.AllTypes().Where(type => type.Name == "ErrorReporter").First();
+
+                var errorReporterInitialisedField = AccessTools.Field(errorReporterType, "_initialized");
+
+                HarmonyInstance.Patch(AccessTools.Method(errorReporterType, "Initialize"), prefix: new HarmonyMethod(NeuterErrorReporter.PreventErrorReporterFromRunning));
+
+                Logger.LogDebug($"Was error reporter already initialised?: {errorReporterInitialisedField.GetValue(null)}");
+
+                //if the error reporter has already been initialised, we can prevent it from reporting any further errors by setting the _initialized flag to false
+                errorReporterInitialisedField.SetValue(null, false);
+            }
         }
 
         [HarmonyPostfix]
@@ -72,6 +88,21 @@ namespace BepInSbox.Core.Sbox
             }
 
             Logger.LogDebug($"new scene: {ManagerObject.Scene}");
+        }
+
+        //if someone tries using this with the editor or whatever, at least Facepunch won't be flooded with bullshit errors or whatever :(
+        private static class NeuterErrorReporter
+        {
+            [HarmonyPrefix]
+            internal static bool PreventErrorReporterFromRunning(bool ____initialized)
+            {
+                //it gets initialised a bunch of times, it's weird, idk
+                Logger.LogDebug("Checking if Error Reporter was initialised: " + ____initialized);
+
+                Logger.LogDebug("Successfully neutered error reporter!");
+
+                return false;
+            }
         }
 
         //in sbox, it's the scene's role to call the various update methods for components. Usually, component that overrides each update type (OnUpdate, OnFixedUpdate, OnPreRender) automatically have an interface, added to them when s&box compiles the code, that signals which update type it overrides
