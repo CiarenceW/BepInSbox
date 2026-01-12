@@ -16,7 +16,7 @@
         <BuildDir>$(SolutionDir)bin</BuildDir>
         <PackageOutputPath>$(BuildDir)/NuGet</PackageOutputPath>
         <PackageIcon>logo.png</PackageIcon>
-		<OutDir>$(MSBuildThisFileDirectory)\bin\$(Configuration)\latest</OutDir>
+		<OutDir>$(MSBuildThisFileDirectory)\bin\$(Configuration)\latest\BepInSbox\core</OutDir>
     </PropertyGroup>
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
@@ -36,7 +36,11 @@
         <Delete Files="@(FilesToDelete)" />
     </Target>
 	
-
+	<Target Name="CopyMiscFilesToOutputDir" BeforeTargets="ZipOutputPath">
+		<Copy
+			SourceFiles="$(SolutionDir)\Doorstop\bin\x64\$(Configuration)\xinput1_4.dll;$(SolutionDir)\Doorstop\lib\nethost.dll;$(SolutionDir)\README.md"
+			DestinationFolder="$(MSBuildThisFileDirectory)\bin\$(Configuration)\latest" />
+	</Target>
 
     <Target Name="ZipOutputPath" AfterTargets="Build">
         <ZipDirectory
