@@ -51,13 +51,9 @@ constexpr bool debugWithMessageBoxes = false;
 //most of the following is from https://learn.microsoft.com/en-us/dotnet/core/tutorials/netcore-hosting, and https://github.com/dotnet/samples/blob/main/core/hosting/src/NativeHost/nativehost.cpp
 
 // Globals to hold hostfxr exports
-hostfxr_initialize_for_dotnet_command_line_fn init_for_cmd_line_fptr;
 hostfxr_initialize_for_runtime_config_fn init_for_config_fptr;
 hostfxr_get_runtime_delegate_fn get_delegate_fptr;
-hostfxr_run_app_fn run_app_fptr;
 hostfxr_close_fn close_fptr;
-
-hostfxr_handle cxt = nullptr;
 
 void* load_library(const char_t* path)
 {
@@ -87,10 +83,8 @@ bool load_hostfxr()
 
 	void* lib = load_library(buffer);
 
-	init_for_cmd_line_fptr = (hostfxr_initialize_for_dotnet_command_line_fn)get_export(lib, "hostfxr_initialize_for_dotnet_command_line");
 	init_for_config_fptr = (hostfxr_initialize_for_runtime_config_fn)get_export(lib, "hostfxr_initialize_for_runtime_config");
 	get_delegate_fptr = (hostfxr_get_runtime_delegate_fn)get_export(lib, "hostfxr_get_runtime_delegate");
-	run_app_fptr = (hostfxr_run_app_fn)get_export(lib, "hostfxr_run_app");
 	close_fptr = (hostfxr_close_fn)get_export(lib, "hostfxr_close");
 
 	return (init_for_config_fptr && get_delegate_fptr && close_fptr);
@@ -176,7 +170,7 @@ void loadEntryPointMethod(load_assembly_and_get_function_pointer_fn load_assembl
 
 }
 
-void initNetCore(const std::wstring config_path)
+void initNetCore(const string_t config_path)
 {
 #if defined (_WIN32)
 	if (debugWithMessageBoxes)
@@ -292,9 +286,9 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 
 		std::filesystem::path runtimeConfigPath = path.replace_filename(L"sbox-standalone.runtimeconfig.json");
 
-		file << "runtime config full path: " << runtimeConfigPath.wstring() << std::endl;
+		file << "runtime config full path: " << runtimeConfigPath << std::endl;
 
-		initNetCore(runtimeConfigPath.wstring());
+		initNetCore(runtimeConfigPath);
 
 		file.close();
 
