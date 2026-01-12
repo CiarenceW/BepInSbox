@@ -277,11 +277,12 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 
         if (path.filename() == "sbox.exe")
         {
-#if defined (_WIN32)
-            MessageBox(0, L"Trying to use this with the real s&box? booooooooooooooooooooooooooooooooo", L"I'm cross at you", MB_ICONERROR | MB_OKCANCEL);
-#endif
+            file << "current exe is sbox.exe, skipping loading shit, sowwie mxster facepunch " << path.parent_path().wstring() << std::endl;
 
-            return false;
+            file.close();
+
+            //sbox's editor is in the same folder as sbox.exe, so if we want to mod the editor and also play the game, we should just pretend like the load went fine and let the game go on its merry way ^^
+            return true;
         }
 
 		std::filesystem::path runtimeConfigPath = path.replace_filename(L"sbox-standalone.runtimeconfig.json");
