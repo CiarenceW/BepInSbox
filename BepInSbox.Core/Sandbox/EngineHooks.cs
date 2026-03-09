@@ -119,6 +119,8 @@ namespace BepInSbox.Core.Sbox
             {
                 CodeMatcher codeMatcher = new CodeMatcher(instructions, generator);
 
+
+
                 //IUpdateSubscriber
                 {
                     //copy the destination of the brtrue label to use later
@@ -126,7 +128,7 @@ namespace BepInSbox.Core.Sbox
                         .Start()
                         .MatchForward(true,
                             [
-                                new (Ldloc_1),
+                                new (Ldloc_0),
                                 new (Isinst, typeof(Sandbox.Internal.IUpdateSubscriber)),
                                 new (Brtrue)
                             ]
@@ -157,7 +159,7 @@ namespace BepInSbox.Core.Sbox
                     var implementsOnFixedUpdateTrueTarget = (Label)codeMatcher
                         .MatchForward(true,
                             [
-                                new (Ldloc_1),
+                                new (Ldloc_0),
                                 new (Isinst, typeof(Sandbox.Internal.IFixedUpdateSubscriber)),
                                 new (Brtrue)
                             ]
@@ -189,7 +191,7 @@ namespace BepInSbox.Core.Sbox
                     var ifStartLabel = codeMatcher
                         .MatchForward(false,
                             [
-                                new (Ldloc_1),
+                                new (Ldloc_0),
                                 new (Isinst, typeof(Sandbox.Internal.IPreRenderSubscriber)),
                                 new (Brfalse)
                             ]
