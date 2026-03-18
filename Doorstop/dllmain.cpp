@@ -12,9 +12,9 @@
 #include <fstream>
 #include <iostream>
 #include <ShlObj_core.h>
-#include <hostfxr.h>
-#include <nethost.h>
-#include <coreclr_delegates.h>
+#include "lib/hostfxr.h"
+#include "lib/nethost.h"
+#include "lib/coreclr_delegates.h"
 #include "dllmain.h"
 #include <time.h>
 

@@ -290,3 +290,8 @@ __pycache__/
 
 # Cake binaries
 tools/
+
+# CMake shit
+Doorstop/build
+Doorstop/out
+out/

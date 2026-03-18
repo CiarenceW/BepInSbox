@@ -1,51 +1,20 @@
 <Project>
-    <PropertyGroup>
-        <VersionPrefix>1.2.1</VersionPrefix>
-        <Authors>BepInEx (Original) CiarenceW (fork)</Authors>
-        <LangVersion>latest</LangVersion>
-        <Nullable>disable</Nullable>
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <PackageLicenseExpression>LGPL-2.1-only</PackageLicenseExpression>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <DebugType>embedded</DebugType>
-        <Configurations>Debug;Release</Configurations>
-        <PackageProjectUrl>https://github.com/CiarenceW/BepInSbox</PackageProjectUrl>
-        <RepositoryUrl>https://github.com/CiarenceW/BepInSbox</RepositoryUrl>
-        <RepositoryType>git</RepositoryType>
-        <Copyright>Copyright © 2022 BepInEx Team</Copyright>
-        <BuildDir>$(SolutionDir)bin</BuildDir>
-        <PackageOutputPath>$(BuildDir)/NuGet</PackageOutputPath>
-        <PackageIcon>logo.png</PackageIcon>
-		<OutDir>$(MSBuildThisFileDirectory)\bin\$(Configuration)\latest\BepInSbox\core</OutDir>
-    </PropertyGroup>
+	<!-- Include all properties declared in before.BepInSbox.sln.targets, otherwise we'd have to duplicate a ton of shit -->
+	<Import Project="$(MSBuildThisFileDirectory)/before.BepInSbox.sln.targets" />
+	
     <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     </PropertyGroup>
-    <ItemGroup>
-        <None Include="$(SolutionDir)\assets\logos\logo.png" Pack="true" Visible="false" PackagePath=""/>
-    </ItemGroup>
-
-    <Target Name="DeleteSys" AfterTargets="Build">
+	
+    <Target Name="DeleteSys" AfterTargets="PostBuildEvent">
         <ItemGroup>
 			<!-- Possibly shooting myself in the foot, but I don't think this is required for us, I think we include all the needed dependencies -->
-			<FilesToDelete Include="$(OutDir)*.deps.json"/>
+			<FilesToDelete Include="$(OutDir)/*.deps.json"/>
 			
 			<!-- Remove all Mono.Cecil and MonoMod dlls, they're already used by the game -->
-            <FilesToDelete Include="$(OutDir)Mono*.dll"/>
+            <FilesToDelete Include="$(OutDir)/Mono*.dll"/>
         </ItemGroup>
         <Delete Files="@(FilesToDelete)" />
     </Target>
 	
-	<Target Name="CopyMiscFilesToOutputDir" BeforeTargets="ZipOutputPath">
-		<Copy
-			SourceFiles="$(SolutionDir)\Doorstop\bin\x64\$(Configuration)\xinput1_4.dll;$(SolutionDir)\Doorstop\lib\nethost.dll;$(SolutionDir)\README.md"
-			DestinationFolder="$(MSBuildThisFileDirectory)\bin\$(Configuration)\latest" />
-	</Target>
-
-    <Target Name="ZipOutputPath" AfterTargets="Build">
-        <ZipDirectory
-            SourceDirectory="$(MSBuildThisFileDirectory)\bin\$(Configuration)\latest"
-            Overwrite="true"
-            DestinationFile="$(SolutionDir)\packages\BepInSbox-$(VersionPrefix).zip" />
-    </Target>
 </Project>
