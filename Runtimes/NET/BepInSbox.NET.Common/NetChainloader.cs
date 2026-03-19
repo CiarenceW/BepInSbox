@@ -30,6 +30,10 @@ namespace BepInSbox.NET.Common
         //to do that, we can call TypeLibrary.AddAssembly(Assembly, bool), if the bool is true, it'll add all types from the assembly
         private static readonly AddAssemblyDelegate TypeLibrary_AddAssembly = AccessTools.MethodDelegate<AddAssemblyDelegate>(AccessTools.Method(typeof(TypeLibrary), "AddAssembly"));
 
+        private delegate void ConVarAddAssemblyDelegate(Assembly assembly, string cookies, string context = null);
+
+        private static readonly ConVarAddAssemblyDelegate ConVarSystem_AddAssembly = AccessTools.MethodDelegate<ConVarAddAssemblyDelegate>(AccessTools.Method(typeof(CookieContainer).Assembly.GetType("ConVarSystem"), "AddAssembly"));
+
         public override void Initialize()
         {
             Instance = this;
@@ -67,6 +71,8 @@ namespace BepInSbox.NET.Common
             var type = pluginAssembly.GetType(pluginInfo.TypeName);
 
             TypeLibrary_AddAssembly(Game.TypeLibrary, pluginAssembly, true);
+
+            ConVarSystem_AddAssembly(pluginAssembly, pluginInfo.Metadata.GUID);
 
             //We're looking for if the type has overriden the OnUpdate, OnFixedUpdate, or OnPreRender methods with those flags
             var implementedFlags = BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.NonPublic;
