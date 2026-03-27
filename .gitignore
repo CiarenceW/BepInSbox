@@ -290,3 +290,7 @@ __pycache__/
 
 # Cake binaries
 tools/
+
+Doorstop/build/
+Doorstop/out/
+out/build/x64-debug/
