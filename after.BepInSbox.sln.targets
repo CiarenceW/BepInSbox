@@ -1,0 +1,46 @@
+<Project>
+
+	<Target Name="BuildRustyDoorstop" BeforeTargets="CopyMiscFilesToOutputDir">
+		<!-- don't really see a reason why we'd want to build it in debug, it screws up the exports' names -->
+		<Exec  
+			Command="cargo build --release"
+			WorkingDirectory="$(MSBuildThisFileDirectory)/Doorstop" />
+	</Target>
+	
+	<Target Name="CopyMiscFilesToOutputDir" BeforeTargets="ZipOutputPath">
+		<Copy
+			SourceFiles="$(MSBuildThisFileDirectory)Doorstop/target/release/Doorstop.dll;$(MSBuildThisFileDirectory)Doorstop/src/lib/nethost.dll;$(MSBuildThisFileDirectory)README.md"
+			DestinationFiles="$(MSBuildThisFileDirectory)bin/$(Configuration)/latest/xinput1_4.dll;$(MSBuildThisFileDirectory)bin/$(Configuration)/nethost.dll;$(MSBuildThisFileDirectory)bin/$(Configuration)/README.md" />
+	</Target>
+
+    <Target Name="ZipOutputPath" AfterTargets="Build">
+        <ZipDirectory
+            SourceDirectory="$(MSBuildThisFileDirectory)/bin/$(Configuration)/latest"
+            Overwrite="true"
+            DestinationFile="$(MSBuildThisFileDirectory)/packages/BepInSbox-$(VersionPrefix).zip" />
+    </Target>
+	
+	<!--
+	Source - https://stackoverflow.com/a/17712386
+	Posted by Nicodemeus, modified by community. See post 'Timeline' for change history
+	Retrieved 2026-03-09, License - CC BY-SA 3.0
+	I love you bananane-->
+	<Target Name="Banana" AfterTargets="Build">
+		<Message Text="*** BEGIN BANANA ***" Importance="high" />
+		<Message Text=" _                                          " Importance="high" />
+		<Message Text="//\                                         " Importance="high" />
+		<Message Text="V  \                                        " Importance="high" />
+		<Message Text=" \  \_                                      " Importance="high" />
+		<Message Text="  \,'.`-.                                   " Importance="high" />
+		<Message Text="   |\ `. `.                                 " Importance="high" />
+		<Message Text="   ( \  `. `-.                        _,.-:\" Importance="high" />
+		<Message Text="    \ \   `.  `-._             __..--' ,-';/" Importance="high" />
+		<Message Text="     \ `.   `-.   `-..___..---'   _.--' ,'/ " Importance="high" />
+		<Message Text="      `. `.    `-._        __..--'    ,' /  " Importance="high" />
+		<Message Text="        `. `-_     ``--..''       _.-' ,'   " Importance="high" />
+		<Message Text="          `-_ `-.___        __,--'   ,'     " Importance="high" />
+		<Message Text="             `-.__  `----'''    __.-'       " Importance="high" />
+		<Message Text="                  `--..____..--'            " Importance="high" />
+		<Message Text="*** END BANANA ***"  Importance="high" />
+	</Target>
+</Project>

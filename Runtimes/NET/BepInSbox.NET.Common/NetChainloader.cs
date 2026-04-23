@@ -32,7 +32,8 @@ namespace BepInSbox.NET.Common
 
         private delegate void ConVarAddAssemblyDelegate(Assembly assembly, string cookies, string context = null);
 
-        private static readonly ConVarAddAssemblyDelegate ConVarSystem_AddAssembly = AccessTools.MethodDelegate<ConVarAddAssemblyDelegate>(AccessTools.Method(typeof(CookieContainer).Assembly.GetType("ConVarSystem"), "AddAssembly"));
+        //we can get sbox to check the plugin's assembly for conCommands/conVars by calling this
+        private static readonly ConVarAddAssemblyDelegate ConVarSystem_AddAssembly = AccessTools.MethodDelegate<ConVarAddAssemblyDelegate>(AccessTools.Method(AccessTools.TypeByName("Sandbox.ConVarSystem"), "AddAssembly"));
 
         public override void Initialize()
         {

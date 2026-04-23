@@ -51,19 +51,12 @@ namespace BepInSbox.Core.Sbox
 
             HarmonyInstance.PatchAll(typeof(ComponentUpdateFix));
 
-            //don't have to bother if we're standalone, it's already not initialising
+            //don't have to bother if we're standalone, it's already returning false
             if (!Application.IsStandalone)
             {
                 var errorReporterType = AccessTools.AllTypes().Where(type => type.Name == "ErrorReporter").First();
 
-                var errorReporterInitialisedField = AccessTools.Field(errorReporterType, "_initialized");
-
-                HarmonyInstance.Patch(AccessTools.Method(errorReporterType, "Initialize"), prefix: new HarmonyMethod(NeuterErrorReporter.PreventErrorReporterFromRunning));
-
-                Logger.LogDebug($"Was error reporter already initialised?: {errorReporterInitialisedField.GetValue(null)}");
-
-                //if the error reporter has already been initialised, we can prevent it from reporting any further errors by setting the _initialized flag to false
-                errorReporterInitialisedField.SetValue(null, false);
+                HarmonyInstance.Patch(AccessTools.Method(errorReporterType, "get_IsUsingSentry"), prefix: new HarmonyMethod(NeuterErrorReporter.PreventErrorReporterFromRunning));
             }
         }
 
@@ -94,12 +87,9 @@ namespace BepInSbox.Core.Sbox
         private static class NeuterErrorReporter
         {
             [HarmonyPrefix]
-            internal static bool PreventErrorReporterFromRunning(bool ____initialized)
+            internal static bool PreventErrorReporterFromRunning(ref bool __result)
             {
-                //it gets initialised a bunch of times, it's weird, idk
-                Logger.LogDebug("Checking if Error Reporter was initialised: " + ____initialized);
-
-                Logger.LogDebug("Successfully neutered error reporter!");
+                __result = false;
 
                 return false;
             }
