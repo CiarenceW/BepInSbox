@@ -48,8 +48,7 @@ The BaseSandboxPlugin class is derived from Sandbox.Component, it is the core of
 For more info, visit https://docs.bepinex.dev/articles/dev_guide/plugin_tutorial/index.html  
 
 ## Building  
-To build BepInS&x, execute the build.cmd script. You'll also need to have s&box installed, and to have started it at least once.  
-To build the Doorstop, just use VS2022 and build it from there :)
+To build BepInS&x, run `dotnet build`. You'll also need to have s&box installed, and to have started it at least once.
 
 ## Used libraries
 
@@ -59,6 +58,7 @@ To build the Doorstop, just use VS2022 and build it from there :)
 - [jbevain/cecil](https://github.com/jbevain/cecil) - v0.10.4
 - [dotnet/runtime](https://github.com/dotnet/runtime) - v9.0.9 (hostfxr, used by the Doorstop)
 - [ThirteenAG/Ultimate-ASI-Loader](https://github.com/ThirteenAG/Ultimate-ASI-Loader) - v9.0.0
+- [microsoft/windows-rs](https://github.com/microsoft/windows-rs) - v73
 
 ## License
 
