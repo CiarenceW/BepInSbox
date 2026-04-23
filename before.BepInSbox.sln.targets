@@ -14,6 +14,7 @@
         <RepositoryType>git</RepositoryType>
         <Copyright>Copyright © 2022 BepInEx Team</Copyright>
         <BuildDir>$(MSBuildThisFileDirectory)bin</BuildDir>
+		<OutDir>$(MSBuildThisFileDirectory)\bin\$(Configuration)\latest\BepInSbox\core</OutDir>
     </PropertyGroup>
     <ItemGroup>
         <None Include="$(MSBuildThisFileDirectory)/assets/logos/logo.png" Pack="true" Visible="false" PackagePath=""/>

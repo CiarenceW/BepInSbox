@@ -10,7 +10,7 @@
 	<Target Name="CopyMiscFilesToOutputDir" BeforeTargets="ZipOutputPath">
 		<Copy
 			SourceFiles="$(MSBuildThisFileDirectory)Doorstop/target/release/Doorstop.dll;$(MSBuildThisFileDirectory)Doorstop/src/lib/nethost.dll;$(MSBuildThisFileDirectory)README.md"
-			DestinationFiles="$(MSBuildThisFileDirectory)bin/$(Configuration)/latest/xinput1_4.dll;$(MSBuildThisFileDirectory)bin/$(Configuration)/nethost.dll;$(MSBuildThisFileDirectory)bin/$(Configuration)/README.md" />
+			DestinationFiles="$(MSBuildThisFileDirectory)bin/$(Configuration)/latest/xinput1_4.dll;$(MSBuildThisFileDirectory)bin/$(Configuration)/latest/nethost.dll;$(MSBuildThisFileDirectory)bin/$(Configuration)/latest/README.md" />
 	</Target>
 
     <Target Name="ZipOutputPath" AfterTargets="Build">

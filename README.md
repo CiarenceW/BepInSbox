@@ -48,7 +48,7 @@ The BaseSandboxPlugin class is derived from Sandbox.Component, it is the core of
 For more info, visit https://docs.bepinex.dev/articles/dev_guide/plugin_tutorial/index.html  
 
 ## Building  
-To build BepInS&x, run `dotnet build`. You'll also need to have s&box installed, and to have started it at least once.
+To build BepInS&x, run `dotnet build -c release`. You'll also need to have s&box installed, and to have started it at least once.
 
 ## Used libraries
 
