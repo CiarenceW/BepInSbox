@@ -3,9 +3,12 @@ use std::io::Bytes;
 #[cfg(not(target_family = "windows"))]
 use std::os::unix::ffi::OsStrExt;
 
-use std::{char::MAX, env, ffi::{OsStr, OsString}, fs::File, io::Write, os::raw::c_void, path::{Path, PathBuf}, str::FromStr, time::Instant};
+use std::{char::MAX, env, ffi::{OsStr, OsString}, fs::File, io::Write, ffi::c_void, path::{Path, PathBuf}, str::FromStr, time::SystemTime};
 
 mod lib { pub mod hostfxr; pub mod coreclr_delegates; pub mod nethost; }
+
+#[cfg(target_family = "windows")]
+mod xinput_def;
 
 #[cfg(target_family = "windows")]
 use windows::{
@@ -44,26 +47,33 @@ const DLL_NAME: &'static str = "RustyDoorstop";
 #[cfg(not(target_family = "windows"))]
 const MAX_PATH: usize = 255;
 
-fn get_dotnet_load_assembly(config_path: OsString, get_delegate_fptr: HostfxrGetRuntimeDelegateFn, init_for_config_fptr: HostfxrInitializeForRuntimeConfigFn, close_fptr: HostfxrCloseFn, mut out_file: File) -> LoadAssemblyAndGetFunctionPointerFn
+fn get_dotnet_load_assembly(config_path: OsString, init_for_config_fptr: HostfxrInitializeForRuntimeConfigFn, get_delegate_fptr: HostfxrGetRuntimeDelegateFn, close_fptr: HostfxrCloseFn, mut out_file: &File) -> LoadAssemblyAndGetFunctionPointerFn
 {
 	unsafe
 	{
 		let mut load_assembly_and_get_function_pointer: *mut c_void = std::ptr::null_mut();
-		
-		let rc = get_delegate_fptr(std::ptr::null_mut::<c_void>(), crate::lib::hostfxr::HOSTFXR_DELEGATE_TYPE_HDT_LOAD_ASSEMBLY_AND_GET_FUNCTION_POINTER, &mut load_assembly_and_get_function_pointer);
+
+		let rc = get_delegate_fptr(std::ptr::null(), crate::lib::hostfxr::HostfxrDelegateType::HDT_LOAD_ASSEMBLY_AND_GET_FUNCTION_POINTER, &mut load_assembly_and_get_function_pointer);
 
 		if (rc >= 0)
 		{
-			out_file.write_all(b"skipping initialising host, there's already one running");
+			out_file.write_all(b"skipping initialising host, there's already one running\n");
 
 			return std::mem::transmute(load_assembly_and_get_function_pointer);
 		}
 
+        out_file.write_all(format!("host doesn't exist, initialising a new one, lol: {rc:x}\n").as_bytes());
+
 		let mut cxt: HostfxrHandle = std::ptr::null_mut();
 
 		#[cfg(target_family = "windows")]
-		//cum
+		//warning!!! this doesn't actually work lol, it fucks up for some reason and a bunch of bullshit gets added at the end lol :)
 		let mut path_bytes: Vec<u16> = config_path.to_str().unwrap().encode_utf16().collect();
+
+        #[cfg(target_family = "windows")]
+        path_bytes.push(0);
+
+        out_file.write_all(format!("full path byte array: {:?}\n", path_bytes).as_bytes());
 
 		#[cfg(not(target_family = "windows"))]
 		let path_bytes = config_path.as_bytes();
@@ -72,16 +82,16 @@ fn get_dotnet_load_assembly(config_path: OsString, get_delegate_fptr: HostfxrGet
 
 		if (cxt.is_null())
 		{
-			out_file.write_all( format!("Init failed: {:x}", rc).as_bytes());
+			out_file.write_all(format!("Init failed: {:x}\n", rc).as_bytes());
 
 			close_fptr(cxt);
 
 			return std::mem::transmute(std::ptr::null::<LoadAssemblyAndGetFunctionPointerFn>());
 		}
 
-		out_file.write_all(format!("HostFXR Content Handle: {:x}", cxt as usize).as_bytes());
+		out_file.write_all(format!("HostFXR Content Handle: {:x}\n", cxt as usize).as_bytes());
 
-		let rc = get_delegate_fptr(cxt, crate::lib::hostfxr::HOSTFXR_DELEGATE_TYPE_HDT_LOAD_ASSEMBLY_AND_GET_FUNCTION_POINTER, &mut load_assembly_and_get_function_pointer);
+		let rc = get_delegate_fptr(cxt, crate::lib::hostfxr::HostfxrDelegateType::HDT_LOAD_ASSEMBLY_AND_GET_FUNCTION_POINTER, &mut load_assembly_and_get_function_pointer);
 
 		if (rc != 0 || load_assembly_and_get_function_pointer.is_null())
 		{
@@ -141,27 +151,40 @@ fn load_hostfxr<'delegate_life>(lib: &'delegate_life Library) -> (Symbol<'delega
 	}
 }
 
-fn load_entry_point_method(load_assembly_and_get_function_pointer: LoadAssemblyAndGetFunctionPointerFn)
+fn load_entry_point_method(load_assembly_and_get_function_pointer: LoadAssemblyAndGetFunctionPointerFn, mut out_file: &File)
 {
 	unsafe
 	{
+        let path = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join("BepInSbox").join("core").join("BepInSbox.NET.CoreCLR.dll");
+
 		#[cfg(target_family = "windows")]
-		let entrypoint_dll_path: Vec<u16> = std::env::current_exe().expect("failed to get current exe path bla bla bla").to_str().unwrap().encode_utf16().collect();
+		let mut entrypoint_dll_path: Vec<u16> = path.to_str().unwrap().encode_utf16().collect();
+
+        #[cfg(target_family = "windows")]
+        entrypoint_dll_path.push(0);
 
 		#[cfg(not(target_family = "windows"))]
-		let entrypoint_dll_path = std::env::current_exe().expect("failed to get current exe path bla bla bla").into_os_string().as_bytes().to_owned();
+		let entrypoint_dll_path = path.into_os_string().as_bytes().to_owned();
+
+        out_file.write_all(format!("BepInSbox entrypoint dll: {}\n", path.display()).as_bytes());
 		
 		let dotnet_type = "StartupHook, BepInSbox.NET.CoreCLR";
 
 		#[cfg(target_family = "windows")]
-		let dotnet_type: Vec<u16> = dotnet_type.encode_utf16().collect();
-		
+		let mut dotnet_type: Vec<u16> = dotnet_type.encode_utf16().collect();
+
+        #[cfg(target_family = "windows")]
+        dotnet_type.push(0);
+
 		let dotnet_type_method = "Initialize";
 
 		#[cfg(target_family = "windows")]
-		let dotnet_type_method: Vec<u16> = dotnet_type_method.encode_utf16().collect();
+		let mut dotnet_type_method: Vec<u16> = dotnet_type_method.encode_utf16().collect();
+
+        #[cfg(target_family = "windows")]
+        dotnet_type_method.push(0);
 		
-		let mut bootstrap: *mut ComponentEntryPointFn = std::ptr::null_mut::<ComponentEntryPointFn>();
+		let mut bootstrap: *mut ComponentEntryPointFn = std::ptr::null_mut();
 		
 		let rc = load_assembly_and_get_function_pointer(
 			entrypoint_dll_path.as_ptr(), 
@@ -172,9 +195,14 @@ fn load_entry_point_method(load_assembly_and_get_function_pointer: LoadAssemblyA
 			std::mem::transmute(&mut bootstrap)
 		);
 
+        out_file.write_all(format!("load_assembly_and_get_function_pointer rc: {:x}\n", rc).as_bytes());
+
+        out_file.write_all(if bootstrap.is_null() { "bootstrap is null".as_bytes() } else { "bootstrap isn't null!!!".as_bytes() });
+
 		if (rc == 0 && !bootstrap.is_null())
 		{
-			(*bootstrap)(std::ptr::null_mut(), 0);
+            //aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+			std::mem::transmute::<*mut ComponentEntryPointFn, ComponentEntryPointFn>(bootstrap)(std::ptr::null_mut(), 0);
 		}
 	}
 }
@@ -191,15 +219,15 @@ fn init_net_core(config_path: OsString, mut out_file: File)
 		
 		//begin lib stuff scope
 		{
-		let lib = load_library();
+		    let lib = load_library();
 		
-		let shtuff = load_hostfxr(&lib);
+		    let shtuff = load_hostfxr(&lib);
 		
-		let mut load_assembly_and_get_function_pointer = get_dotnet_load_assembly(config_path, std::mem::transmute(shtuff.0.try_as_raw_ptr().unwrap()), std::mem::transmute(shtuff.1.try_as_raw_ptr().unwrap()), std::mem::transmute(shtuff.2.try_as_raw_ptr().unwrap()), out_file);
+		    let mut load_assembly_and_get_function_pointer = get_dotnet_load_assembly(config_path, std::mem::transmute(shtuff.0.try_as_raw_ptr().expect("couldn't get HostfxrGetRuntimeDelegateFn")), std::mem::transmute(shtuff.1.try_as_raw_ptr().expect("couldn't get HostfxrInitializeForRuntimeConfigFn")), std::mem::transmute(shtuff.2.try_as_raw_ptr().expect("couldn't get HostfxrCloseFn")), &out_file);
 
-		load_entry_point_method(load_assembly_and_get_function_pointer);
-	}
-}
+    		load_entry_point_method(load_assembly_and_get_function_pointer, &out_file);
+	    }
+    }
 }
 
 #[cfg(target_family = "windows")]
@@ -208,15 +236,10 @@ pub extern "system" fn DllMain(hmodule: HMODULE, ul_reason_for_call: u32, lp_res
 {
 	unsafe 
 	{
-		if (DEBUG_WITH_MESSAGE_BOXES)
-		{
-			MessageBoxW(None, h!("hello"), PWSTR::from_raw((&raw mut *OsString::from(ul_reason_for_call.to_string())) as *mut u16), MB_ICONINFORMATION);
-		}
-
-		let mut out_file = File::create("DoorstopLog.txt").expect("Failed to create/open log file");
-
 		if (ul_reason_for_call == DLL_PROCESS_ATTACH)
 		{
+		    let mut out_file = File::create("DoorstopLog.txt").expect("Failed to create/open log file");
+
 			let p_string : PWSTR;
 			
 			match SHGetKnownFolderPath(&FOLDERID_System, KF_FLAG_DEFAULT, None)
@@ -226,16 +249,22 @@ pub extern "system" fn DllMain(hmodule: HMODULE, ul_reason_for_call: u32, lp_res
 			}
 		
 			//it's probably fine if we don't check whatever
-			let dll_path: PathBuf = PathBuf::from(p_string.to_string().unwrap()).join(DLL_NAME.to_owned() + ".dll");
+			let mut dll_path_vec: Vec<u16> = PathBuf::from(p_string.to_string().unwrap()).join(DLL_NAME.to_owned() + ".dll").to_str().unwrap().encode_utf16().collect();
+
+            //add null terminator
+            dll_path_vec.push(0);
+
+            let dll_path = PCWSTR(dll_path_vec.as_ptr());
 
 			//load orignal dll here later lol
+            crate::xinput_def::LoadOriginalLibrary(LoadLibraryW(dll_path).expect("failed to load original xinput library, lol"));
 			
-			//it'd be nice if u could have liek..... a cool ass human readable timestamp but oh well I guess std sucks LOL
-			out_file.write_all(Instant::now().elapsed().as_secs().to_string().as_bytes());
+            //really cool of the PoR people (People of Rust) to not include a way to display a duration, great works thudes and thirls
+			out_file.write_all((SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs().to_string() + "\n").as_bytes());
 
 			let exe_path = env::current_exe().expect("error getting current exe path? what?");
 
-			out_file.write_all(format!("module filename: {}", exe_path.display()).as_bytes());
+			out_file.write_all(format!("current module filename: {}\n", exe_path.display()).as_bytes());
 
 			let filename: &OsStr;
 			
@@ -248,7 +277,7 @@ pub extern "system" fn DllMain(hmodule: HMODULE, ul_reason_for_call: u32, lp_res
 
 					if (filename == "sbox.exe")
 					{
-						out_file.write_all(b"current exe is sbox.exe, skipping loading shit, sowwie mxster facepunch");
+						out_file.write_all(b"current exe is sbox.exe, skipping loading shit, sowwie mxster facepunch\n");
 
 						//sbox's editor is in the same folder as sbox.exe, so if we want to mod the editor and also play the game, we should just pretend like the load went fine and let the game on its merry way ^^
 						return true as i32;
@@ -258,9 +287,10 @@ pub extern "system" fn DllMain(hmodule: HMODULE, ul_reason_for_call: u32, lp_res
 				None => return false as i32,
 			}
 
-			let runtime_config_path = exe_path.with_file_name(filename.to_str().unwrap().to_owned() + ".runtimeconfig.json");
+            //let's hope they never separate the editor and the base game lol (and the standalone shit i guess?)
+			let runtime_config_path = exe_path.with_file_name("sbox-standalone.runtimeconfig.json");
 
-			out_file.write_all(format!("runtime config full path: {}", runtime_config_path.display()).as_bytes());
+			out_file.write_all(format!("runtime config full path: {}\n", runtime_config_path.display()).as_bytes());
 
 			init_net_core(runtime_config_path.into_os_string(), out_file);
 
@@ -272,8 +302,6 @@ pub extern "system" fn DllMain(hmodule: HMODULE, ul_reason_for_call: u32, lp_res
 			{
 				MessageBoxW(None, h!("byee, byereeee"), h!("Goodbye!!!!!!"), MB_ICONINFORMATION);
 			}
-
-			out_file.write_all(b"process detached, goodbye");
 
 			return true as i32;
 		}
