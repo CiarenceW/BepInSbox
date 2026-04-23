@@ -25,4 +25,4 @@ windows = {
 	"Win32_UI_Shell",
 	"Win32_System_SystemServices",
 	]
-}
+}}
