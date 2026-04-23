@@ -36,7 +36,7 @@ pub type char_t = u16;
 pub type char_t = u8;
 
 #[cfg(target_family = "windows")]
-const DEBUG_WITH_MESSAGE_BOXES: bool = true;
+const DEBUG_WITH_MESSAGE_BOXES: bool = false;
 
 #[cfg(target_family = "windows")]
 const DLL_NAME: &'static str = "XInput1_4";
