@@ -66,7 +66,7 @@ pub struct get_hostfxr_parameters {
 //   The full search for the hostfxr library is done on every call. To minimize the need
 //   to call this function multiple times, pass a large buffer (e.g. PATH_MAX).
 //
-#[link(name = "nethost")]
+#[link(name = "nethost", kind = "static")]
 unsafe extern "C" {
     pub unsafe fn get_hostfxr_path(
         buffer: *mut char_t,

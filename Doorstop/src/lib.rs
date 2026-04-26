@@ -5,6 +5,8 @@ use std::os::unix::ffi::OsStrExt;
 
 use std::{char::MAX, env, ffi::{OsStr, OsString}, fs::File, io::Write, ffi::c_void, path::{Path, PathBuf}, str::FromStr, time::SystemTime};
 
+use ctor::ctor;
+
 mod lib { pub mod hostfxr; pub mod coreclr_delegates; pub mod nethost; }
 
 #[cfg(target_family = "windows")]
@@ -73,10 +75,10 @@ fn get_dotnet_load_assembly(config_path: OsString, init_for_config_fptr: Hostfxr
         #[cfg(target_family = "windows")]
         path_bytes.push(0);
 
-        out_file.write_all(format!("full path byte array: {:?}\n", path_bytes).as_bytes());
-
 		#[cfg(not(target_family = "windows"))]
 		let path_bytes = config_path.as_bytes();
+
+        out_file.write_all(format!("full path byte array: {:?}\n", path_bytes).as_bytes());
 		
 		let rc = init_for_config_fptr(path_bytes.as_ptr(), std::ptr::null(), &mut cxt);
 
@@ -164,7 +166,7 @@ fn load_entry_point_method(load_assembly_and_get_function_pointer: LoadAssemblyA
         entrypoint_dll_path.push(0);
 
 		#[cfg(not(target_family = "windows"))]
-		let entrypoint_dll_path = path.into_os_string().as_bytes().to_owned();
+		let entrypoint_dll_path = path.clone().into_os_string().as_bytes().to_owned();
 
         out_file.write_all(format!("BepInSbox entrypoint dll: {}\n", path.display()).as_bytes());
 		
@@ -228,6 +230,51 @@ fn init_net_core(config_path: OsString, mut out_file: File)
     		load_entry_point_method(load_assembly_and_get_function_pointer, &out_file);
 	    }
     }
+} 
+
+fn init_rusty_doorstop() -> i32
+{
+	let mut out_file = File::create("DoorstopLog.txt").expect("Failed to create/open log file!");
+
+	let exe_path = env::current_exe().expect("error getting current exe path? what?");
+
+    //really cool of the PoR people (People of Rust) to not include a way to display a duration, great works thudes and thirls
+	out_file.write_all((SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs().to_string() + "\n").as_bytes());
+	
+	out_file.write_all(format!("current module filename: {}\n", exe_path.display()).as_bytes());
+
+	//ts sucks ass
+	match (exe_path.file_name())
+	{
+		Some(name) => 
+		{
+			if (name == "sbox.exe")
+			{
+				out_file.write_all(b"current exe is sbox.exe, skipping loading shit, sowwie mxster facepunch\n");
+
+				//sbox's editor is in the same folder as sbox.exe, so if we want to mod the editor and also play the game, we should just pretend like the load went fine and let the game on its merry way ^^
+				return true as i32;
+			}
+		},
+
+		None => return false as i32,
+	}
+
+    //let's hope they never separate the editor and the base game lol (and the standalone shit i guess?)
+	let runtime_config_path = exe_path.with_file_name("sbox-standalone.runtimeconfig.json");
+
+	out_file.write_all(format!("runtime config full path: {}\n", runtime_config_path.display()).as_bytes());
+
+	init_net_core(runtime_config_path.into_os_string(), out_file);
+
+	return true as i32;
+}
+
+#[cfg(target_family = "unix")]
+#[ctor(unsafe)]
+fn ctor_rusty_doorstop()
+{
+	init_rusty_doorstop();
 }
 
 #[cfg(target_family = "windows")]
@@ -259,42 +306,7 @@ pub extern "system" fn DllMain(hmodule: HMODULE, ul_reason_for_call: u32, lp_res
 			//load orignal dll here later lol
             crate::xinput_def::LoadOriginalLibrary(LoadLibraryW(dll_path).expect("failed to load original xinput library, lol"));
 			
-            //really cool of the PoR people (People of Rust) to not include a way to display a duration, great works thudes and thirls
-			out_file.write_all((SystemTime::now().duration_since(SystemTime::UNIX_EPOCH).unwrap().as_secs().to_string() + "\n").as_bytes());
-
-			let exe_path = env::current_exe().expect("error getting current exe path? what?");
-
-			out_file.write_all(format!("current module filename: {}\n", exe_path.display()).as_bytes());
-
-			let filename: &OsStr;
-			
-			//ts sucks ass
-			match (exe_path.file_name())
-			{
-				Some(name) => 
-				{
-					filename = name;
-
-					if (filename == "sbox.exe")
-					{
-						out_file.write_all(b"current exe is sbox.exe, skipping loading shit, sowwie mxster facepunch\n");
-
-						//sbox's editor is in the same folder as sbox.exe, so if we want to mod the editor and also play the game, we should just pretend like the load went fine and let the game on its merry way ^^
-						return true as i32;
-					}
-				},
-
-				None => return false as i32,
-			}
-
-            //let's hope they never separate the editor and the base game lol (and the standalone shit i guess?)
-			let runtime_config_path = exe_path.with_file_name("sbox-standalone.runtimeconfig.json");
-
-			out_file.write_all(format!("runtime config full path: {}\n", runtime_config_path.display()).as_bytes());
-
-			init_net_core(runtime_config_path.into_os_string(), out_file);
-
-			return true as i32;
+			return init_rusty_doorstop() as i32;
 		}
 		else if (ul_reason_for_call == DLL_PROCESS_DETACH)
 		{
