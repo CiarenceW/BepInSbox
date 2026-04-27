@@ -49,6 +49,15 @@ const DLL_NAME: &'static str = "RustyDoorstop";
 #[cfg(not(target_family = "windows"))]
 const MAX_PATH: usize = 255;
 
+struct DoorstopBootSettings
+{
+	enabled: bool,
+	target_assembly_path: PathBuf,
+	target_type_namespace: String,
+	target_method_name: String,
+	runtime_config_name: String
+}
+
 fn get_dotnet_load_assembly(config_path: OsString, init_for_config_fptr: HostfxrInitializeForRuntimeConfigFn, get_delegate_fptr: HostfxrGetRuntimeDelegateFn, close_fptr: HostfxrCloseFn, mut out_file: &File) -> LoadAssemblyAndGetFunctionPointerFn
 {
 	unsafe
@@ -153,11 +162,11 @@ fn load_hostfxr<'delegate_life>(lib: &'delegate_life Library) -> (Symbol<'delega
 	}
 }
 
-fn load_entry_point_method(load_assembly_and_get_function_pointer: LoadAssemblyAndGetFunctionPointerFn, mut out_file: &File)
+fn load_entry_point_method(load_assembly_and_get_function_pointer: LoadAssemblyAndGetFunctionPointerFn, mut out_file: &File, settings: DoorstopBootSettings)
 {
 	unsafe
 	{
-        let path = PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join("BepInSbox").join("core").join("BepInSbox.NET.CoreCLR.dll");
+        let path = settings.target_assembly_path;
 
 		#[cfg(target_family = "windows")]
 		let mut entrypoint_dll_path: Vec<u16> = path.to_str().unwrap().encode_utf16().collect();
@@ -170,7 +179,7 @@ fn load_entry_point_method(load_assembly_and_get_function_pointer: LoadAssemblyA
 
         out_file.write_all(format!("BepInSbox entrypoint dll: {}\n", path.display()).as_bytes());
 		
-		let dotnet_type = "StartupHook, BepInSbox.NET.CoreCLR";
+		let dotnet_type = settings.target_type_namespace;
 
 		#[cfg(target_family = "windows")]
 		let mut dotnet_type: Vec<u16> = dotnet_type.encode_utf16().collect();
@@ -178,7 +187,7 @@ fn load_entry_point_method(load_assembly_and_get_function_pointer: LoadAssemblyA
         #[cfg(target_family = "windows")]
         dotnet_type.push(0);
 
-		let dotnet_type_method = "Initialize";
+		let dotnet_type_method = settings.target_method_name;
 
 		#[cfg(target_family = "windows")]
 		let mut dotnet_type_method: Vec<u16> = dotnet_type_method.encode_utf16().collect();
@@ -209,7 +218,7 @@ fn load_entry_point_method(load_assembly_and_get_function_pointer: LoadAssemblyA
 	}
 }
 
-fn init_net_core(config_path: OsString, mut out_file: File)
+fn init_net_core(config_path: OsString, mut out_file: File, settings: DoorstopBootSettings)
 {
 	unsafe
 	{
@@ -227,10 +236,55 @@ fn init_net_core(config_path: OsString, mut out_file: File)
 		
 		    let mut load_assembly_and_get_function_pointer = get_dotnet_load_assembly(config_path, std::mem::transmute(shtuff.0.try_as_raw_ptr().expect("couldn't get HostfxrGetRuntimeDelegateFn")), std::mem::transmute(shtuff.1.try_as_raw_ptr().expect("couldn't get HostfxrInitializeForRuntimeConfigFn")), std::mem::transmute(shtuff.2.try_as_raw_ptr().expect("couldn't get HostfxrCloseFn")), &out_file);
 
-    		load_entry_point_method(load_assembly_and_get_function_pointer, &out_file);
+    		load_entry_point_method(load_assembly_and_get_function_pointer, &out_file, settings);
 	    }
     }
 } 
+
+fn check_config_from_args() -> DoorstopBootSettings
+{
+	let args = std::env::args();
+
+	let args_length = args.len();
+
+	let mut args: Vec<String> = args.collect();
+
+	//default values
+	let mut settings = DoorstopBootSettings 
+	{ 
+		enabled: (true), 
+		target_assembly_path: (PathBuf::from(std::env::current_exe().unwrap().parent().unwrap()).join("BepInSbox").join("core").join("BepInSbox.NET.CoreCLR.dll")), 
+		target_type_namespace: ("StartupHook, BepInSbox.NET.CoreCLR".to_string()), 
+		target_method_name: ("Initialize".to_string()),
+		runtime_config_name: ("sbox-standalone.runtimeconfig.json".to_string()),
+	};
+
+	for mut i in 0..args_length
+	{
+		if (args[i].starts_with("--doorstop-"))
+		{
+			let doorstop_arg_name = &args[i].split_off("--doorstop-".len());
+
+			let doorstop_arg_name = doorstop_arg_name.as_str();
+
+			i += 1;
+
+			let doorstop_arg_value = &args[i];
+
+			//arg names are mostly taken from UnityDoorstop, no point changing them
+			match doorstop_arg_name {
+				"enabled" => (settings.enabled = doorstop_arg_value.parse::<bool>().expect("--doorstop-enabled should have value of true, or false")),
+				"target-assembly-path" => (settings.target_assembly_path = PathBuf::from(doorstop_arg_value)),
+				"target-type-namespace" => (settings.target_type_namespace = doorstop_arg_value.to_string()),
+				"target-method-name" => (settings.target_method_name = doorstop_arg_value.to_string()),
+				"runtime-config-name" => (settings.runtime_config_name = doorstop_arg_value.to_string()),
+				_ => (println!("unknown arg: {doorstop_arg_name}")),
+			}
+		}
+	}
+
+	return settings;
+}
 
 fn init_rusty_doorstop() -> i32
 {
@@ -260,12 +314,14 @@ fn init_rusty_doorstop() -> i32
 		None => return false as i32,
 	}
 
+	let settings = check_config_from_args();
+	
     //let's hope they never separate the editor and the base game lol (and the standalone shit i guess?)
-	let runtime_config_path = exe_path.with_file_name("sbox-standalone.runtimeconfig.json");
+	let runtime_config_path = exe_path.with_file_name(&settings.runtime_config_name);
 
 	out_file.write_all(format!("runtime config full path: {}\n", runtime_config_path.display()).as_bytes());
 
-	init_net_core(runtime_config_path.into_os_string(), out_file);
+	init_net_core(runtime_config_path.into_os_string(), out_file, settings);
 
 	return true as i32;
 }
