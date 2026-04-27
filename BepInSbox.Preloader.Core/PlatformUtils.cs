@@ -25,16 +25,10 @@ public static class PlatformUtils
     [DllImport("ntdll.dll", SetLastError = true)]
     private static extern bool RtlGetVersion(ref WindowsOSVersionInfoExW versionInfo);
 
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern IntPtr LoadLibrary(string libraryName);
-
-    [DllImport("kernel32.dll", SetLastError = true)]
-    private static extern IntPtr GetProcAddress(IntPtr hModule, string procName);
-
     private static bool Is(this OSKind current, OSKind expected) => (current & expected) == expected;
 
     /// <summary>
-    ///     This whole thing has been rendered kind of obselete since MonoMod added <see cref="PlatformDetection"/>, but it still sets some platform specific stuff used for logs, so keeping it for now
+    ///     This whole thing has been rendered kind of obsolete since MonoMod added <see cref="PlatformDetection"/>, but it still sets some platform specific stuff used for logs, so keeping it for now
     /// </summary>
     public static void SetPlatform()
     {
@@ -49,11 +43,9 @@ public static class PlatformUtils
                                          (int) windowsVersionInfo.dwMinorVersion, 0,
                                          (int) windowsVersionInfo.dwBuildNumber);
 
-            var ntDll = LoadLibrary("ntdll.dll");
-            if (ntDll != IntPtr.Zero)
+			if (NativeLibrary.TryLoad("ntdll.dll", out nint ntDll))
             {
-                var wineGetVersion = GetProcAddress(ntDll, "wine_get_version");
-                if (wineGetVersion != IntPtr.Zero)
+                if (NativeLibrary.TryGetExport(ntDll, "wine_get_version", out nint wineGetVersion))
                 {
                     current |= OSKind.Wine;
                     var getVersion = wineGetVersion.AsDelegate<GetWineVersionDelegate>();

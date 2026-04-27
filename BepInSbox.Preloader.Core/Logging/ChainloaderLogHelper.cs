@@ -51,6 +51,8 @@ public static class ChainloaderLogHelper
         Logger.Log(LogLevel.Info,
                    //bepinsbox: unneeded (for now, at least), sbox is 64bit only, but it's cute so I'm leaving it in
                    $"Process bitness: {(Environment.Is64BitProcess ? "64-bit (x64)" : "32-bit (x86)")}");
+
+		Logger.Log(LogLevel.Info, $"Engine version: {File.ReadLines(Path.Combine(Paths.GameRootPath, ".version")).First()}");
     }
 
     private static string GetPlatformString()

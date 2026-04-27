@@ -3,7 +3,7 @@ using System.IO;
 
 namespace BepInSbox.Preloader.Core;
 
-#warning TODO: clean this up, add support for it in our Doorstop
+//I don't think we actually need this lol
 /// <summary>
 ///     Doorstop environment variables, passed into the BepInSbox preloader.
 ///     <para>https://github.com/NeighTools/UnityDoorstop/wiki#environment-variables</para>
