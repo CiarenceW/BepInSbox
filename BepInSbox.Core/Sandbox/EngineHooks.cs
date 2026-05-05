@@ -23,13 +23,13 @@ namespace BepInSbox.Core.Sbox
 
         static ManualLogSource Logger { get; } = BepInSbox.Logging.Logger.CreateLogSource("EngineHooks");
 
-        private delegate void ComponentUpdateEnabledStatus(Component instance);
+        private delegate void ComponentUpdateEnabledStatusDelegate(Component instance);
 
-        private static readonly ComponentUpdateEnabledStatus UpdateEnabledStatus = AccessTools.MethodDelegate<ComponentUpdateEnabledStatus>(AccessTools.Method(typeof(Component), "UpdateEnabledStatus"));
+        private static readonly ComponentUpdateEnabledStatusDelegate UpdateEnabledStatus = AccessTools.MethodDelegate<ComponentUpdateEnabledStatusDelegate>(AccessTools.Method(typeof(Component), "UpdateEnabledStatus"));
 
-        private delegate void SceneAddObjectToDirectory(Scene instance, object obj);
+        private delegate void SceneAddObjectToDirectoryDelegate(Scene instance, object obj);
 
-        private static readonly SceneAddObjectToDirectory AddObjectToDirectory = AccessTools.MethodDelegate<SceneAddObjectToDirectory>(AccessTools.Method(typeof(Scene), "AddObjectToDirectory"));
+        private static readonly SceneAddObjectToDirectoryDelegate AddObjectToDirectory = AccessTools.MethodDelegate<SceneAddObjectToDirectoryDelegate>(AccessTools.Method(typeof(Scene), "AddObjectToDirectory"));
 
         /// <summary>
         ///     We have a handle to the manager object here, since we don't have access to NetChainloader from this assembly, and we can't access the object any other way.
