@@ -31,6 +31,16 @@ namespace BepInSbox.Core.Sbox
 
         private static readonly SceneAddObjectToDirectoryDelegate AddObjectToDirectory = AccessTools.MethodDelegate<SceneAddObjectToDirectoryDelegate>(AccessTools.Method(typeof(Scene), "AddObjectToDirectory"));
 
+        //prevents "tried to unregister unregistered id" warning
+        private delegate void GameObjectDirectoryAddComponentDelegate(GameObjectDirectory directory, Component component);
+
+        private static readonly GameObjectDirectoryAddComponentDelegate AddComponentToIdList = AccessTools.MethodDelegate<GameObjectDirectoryAddComponentDelegate>(AccessTools.Method(typeof(GameObjectDirectory), "Add", [typeof(Component)]));
+
+        //ditto
+        private delegate void GameObjectDirectoryAddGameObjectDelegate(GameObjectDirectory directory, GameObject gameObject);
+
+        private static readonly GameObjectDirectoryAddGameObjectDelegate AddGameObjectToIdList = AccessTools.MethodDelegate<GameObjectDirectoryAddGameObjectDelegate>(AccessTools.Method(typeof(GameObjectDirectory), "Add", [typeof(GameObject)]));
+
         /// <summary>
         ///     We have a handle to the manager object here, since we don't have access to NetChainloader from this assembly, and we can't access the object any other way.
         /// </summary>
@@ -71,8 +81,12 @@ namespace BepInSbox.Core.Sbox
             AccessTools.PropertySetter(typeof(GameObject), nameof(GameObject.Scene)).Invoke(ManagerObject, [ scene ]);
             ManagerObject.Parent = scene;
 
+            AddGameObjectToIdList(scene.Directory, ManagerObject);
+
             foreach (var component in ManagerObject.Components.GetAll()) 
             {
+                AddComponentToIdList(scene.Directory, component);
+
                 //adds the component to the scene's directory, so that their Update methods get called
                 AddObjectToDirectory(scene, component);
 
