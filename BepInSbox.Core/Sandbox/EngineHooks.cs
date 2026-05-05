@@ -23,13 +23,13 @@ namespace BepInSbox.Core.Sbox
 
         static ManualLogSource Logger { get; } = BepInSbox.Logging.Logger.CreateLogSource("EngineHooks");
 
-        delegate void ComponentUpdateEnabledStatus(Component instance);
+        private delegate void ComponentUpdateEnabledStatus(Component instance);
 
-        static ComponentUpdateEnabledStatus updateEnabledStatus = AccessTools.MethodDelegate<ComponentUpdateEnabledStatus>(AccessTools.Method(typeof(Component), "UpdateEnabledStatus"));
+        private static readonly ComponentUpdateEnabledStatus UpdateEnabledStatus = AccessTools.MethodDelegate<ComponentUpdateEnabledStatus>(AccessTools.Method(typeof(Component), "UpdateEnabledStatus"));
 
-        delegate void SceneAddObjectToDirectory(Scene instance, object obj);
+        private delegate void SceneAddObjectToDirectory(Scene instance, object obj);
 
-        static SceneAddObjectToDirectory addObjectToDirectory = AccessTools.MethodDelegate<SceneAddObjectToDirectory>(AccessTools.Method(typeof(Scene), "AddObjectToDirectory"));
+        private static readonly SceneAddObjectToDirectory AddObjectToDirectory = AccessTools.MethodDelegate<SceneAddObjectToDirectory>(AccessTools.Method(typeof(Scene), "AddObjectToDirectory"));
 
         /// <summary>
         ///     We have a handle to the manager object here, since we don't have access to NetChainloader from this assembly, and we can't access the object any other way.
@@ -74,10 +74,10 @@ namespace BepInSbox.Core.Sbox
             foreach (var component in ManagerObject.Components.GetAll()) 
             {
                 //adds the component to the scene's directory, so that their Update methods get called
-                addObjectToDirectory(scene, component);
+                AddObjectToDirectory(scene, component);
 
                 //Kickstart the component's Awake()
-                updateEnabledStatus(component);
+                UpdateEnabledStatus(component);
             }
 
             Logger.LogDebug($"new scene: {ManagerObject.Scene}");
