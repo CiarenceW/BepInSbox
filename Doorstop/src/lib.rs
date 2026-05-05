@@ -10,7 +10,7 @@ use ctor::ctor;
 mod lib { pub mod hostfxr; pub mod coreclr_delegates; pub mod nethost; }
 
 #[cfg(target_family = "windows")]
-mod xinput_def;
+mod bcrypt_def;
 
 #[cfg(target_family = "windows")]
 use windows::{
@@ -41,7 +41,7 @@ pub type char_t = u8;
 const DEBUG_WITH_MESSAGE_BOXES: bool = false;
 
 #[cfg(target_family = "windows")]
-const DLL_NAME: &'static str = "XInput1_4";
+const DLL_NAME: &'static str = "bcrypt";
 
 #[cfg(target_family = "unix")]
 const DLL_NAME: &'static str = "RustyDoorstop";
@@ -106,8 +106,10 @@ fn get_dotnet_load_assembly(config_path: OsString, init_for_config_fptr: Hostfxr
 
 		if (rc != 0 || load_assembly_and_get_function_pointer.is_null())
 		{
-			out_file.write_all(format!("Get delegate failed: {:x}", rc).as_bytes());
+			out_file.write_all(format!("Get delegate failed: {:x}\n", rc).as_bytes());
 		}
+
+        out_file.write_all(format!("get_delegate rc: {:x}\n", rc).as_bytes());
 
 		return std::mem::transmute(std::ptr::null::<LoadAssemblyAndGetFunctionPointerFn>());
 	}
@@ -297,18 +299,31 @@ fn init_rusty_doorstop() -> i32
 	
 	out_file.write_all(format!("current module filename: {}\n", exe_path.display()).as_bytes());
 
-	//ts sucks ass
-	match (exe_path.file_name())
+	//match file name without extension, unix wow soo cool haha :)
+	match (exe_path.file_prefix())
 	{
 		Some(name) => 
 		{
-			if (name == "sbox.exe")
+			if (name == "sbox")
 			{
-				out_file.write_all(b"current exe is sbox.exe, skipping loading shit, sowwie mxster facepunch\n");
+				out_file.write_all(b"current exe is sbox, skipping loading shit, sowwie mxster facepunch\n");
 
 				//sbox's editor is in the same folder as sbox.exe, so if we want to mod the editor and also play the game, we should just pretend like the load went fine and let the game on its merry way ^^
 				return true as i32;
 			}
+            else if (name == "sbox-launcher")
+            {
+                out_file.write_all(b"current exe is sbox-launcher, skipping loading\n");
+
+                //I don't think there's anything we want to do with the launcher? idk, feel free to disable this check :) not the one above though, I'd be very cross if you did >:(
+                return true as i32;
+            }
+            else if (name == "sbox-editor")
+            {
+                out_file.write_all(b"current exe is sbox-editor, won't work, so skipping loading");
+
+                return true as i32;
+            }
 		},
 
 		None => return false as i32,
@@ -360,7 +375,7 @@ pub extern "system" fn DllMain(hmodule: HMODULE, ul_reason_for_call: u32, lp_res
             let dll_path = PCWSTR(dll_path_vec.as_ptr());
 
 			//load orignal dll here later lol
-            crate::xinput_def::LoadOriginalLibrary(LoadLibraryW(dll_path).expect("failed to load original xinput library, lol"));
+            crate::bcrypt_def::LoadOriginalLibrary(LoadLibraryW(dll_path).expect("failed to load original xinput library, lol"));
 			
 			return init_rusty_doorstop() as i32;
 		}
