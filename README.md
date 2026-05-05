@@ -15,7 +15,7 @@ All Unity Mono/IL2CPP/XNA/FNA/MonoGame support has been stripped in order to sim
 A barebones custom Doorstop implementation is also present, used to load a .NET host, which in turn is used to load BepInS&x.  
 
 ## Installing  
-Extract the .zip to the game's root folder, nethost.dll and xinput1_4.dll should be next to the game's .exe, with the BepInSbox folder structure intact.  
+Extract the .zip to the game's root folder, nethost.dll and bcrypt.dll should be next to the game's .exe, with the BepInSbox folder structure intact.  
 
 ## Writing plugins  
 A basic BepInS&x plugin looks like this:  
@@ -53,10 +53,10 @@ To build BepInS&x, run `dotnet build -c release`. You'll also need to have s&box
 ## Used libraries
 
 - [BepInEx/BepInEx](https://github.com/BepInEx/BepInEx) - v6.0.0-77e2ae481710cec52fe78c4954bc381532854dff (forked from)
-- [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) - v2.10.4
-- [MonoMod/MonoMod](https://github.com/MonoMod/MonoMod) - v25.0.8.0
-- [jbevain/cecil](https://github.com/jbevain/cecil) - v0.10.4
-- [dotnet/runtime](https://github.com/dotnet/runtime) - v9.0.9 (hostfxr, used by the Doorstop)
+- [BepInEx/HarmonyX](https://github.com/BepInEx/HarmonyX) - v2.16.0
+- [MonoMod/MonoMod](https://github.com/MonoMod/MonoMod) - v25.0.11.0
+- [jbevain/cecil](https://github.com/jbevain/cecil) - v0.11.6
+- [dotnet/runtime](https://github.com/dotnet/runtime) - v10.0.5 (hostfxr, used by the Doorstop)
 - [ThirteenAG/Ultimate-ASI-Loader](https://github.com/ThirteenAG/Ultimate-ASI-Loader) - v9.0.0
 - [microsoft/windows-rs](https://github.com/microsoft/windows-rs) - v73
 
