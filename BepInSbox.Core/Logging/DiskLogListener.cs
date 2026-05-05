@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace BepInSbox.Logging;
 
@@ -57,10 +58,29 @@ public class DiskLogListener : ILogListener
         {
             delayedFlushing = true;
 
-            if (delayedFlushing) FlushTimer = new Timer(o => { LogWriter?.Flush(); }, null, 2000, 2000);
+            if (delayedFlushing)
+            {
+                FlushToken = new CancellationTokenSource();
+
+                DelayedFlushAsync(FlushToken.Token);
+            }
         }
 
         InstantFlushing = !delayedFlushing;
+    }
+
+    private async void DelayedFlushAsync(CancellationToken token)
+    {
+        while (true)
+        {
+            if (token.IsCancellationRequested)
+                return;
+
+            await Task.Delay(2000, token);
+
+            //don't want to cancel this
+            await LogWriter.FlushAsync(CancellationToken.None);
+        }
     }
 
     /// <summary>
@@ -73,10 +93,7 @@ public class DiskLogListener : ILogListener
     /// </summary>
     public TextWriter LogWriter { get; protected set; }
 
-    /// <summary>
-    ///     Timer for flushing the logs to a file.
-    /// </summary>
-    private Timer FlushTimer { get; }
+    private CancellationTokenSource FlushToken { get; }
 
     private bool InstantFlushing { get; }
 
@@ -101,7 +118,10 @@ public class DiskLogListener : ILogListener
     /// <inheritdoc />
     public void Dispose()
     {
-        FlushTimer?.Dispose();
+        GC.SuppressFinalize(this);
+
+        FlushToken?.Cancel();
+        FlushToken?.Dispose();
 
         try
         {
