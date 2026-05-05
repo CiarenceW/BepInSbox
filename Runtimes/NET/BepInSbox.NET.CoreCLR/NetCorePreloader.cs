@@ -56,12 +56,11 @@ namespace BepInSbox.NET.CoreCLR
 
             Log.LogMessage("Preloader finished");
 
-            EngineHooks.Patch();
+            var chainloader = new NetChainloader();
+
+            EngineHooks.PreHook(() => { chainloader.Initialize(); });
 
             Logger.Listeners.Remove(preloaderListener);
-
-            var chainloader = new NetChainloader();
-            chainloader.Initialize();
         }
     }
 }

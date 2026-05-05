@@ -1,13 +1,11 @@
 using HarmonyLib;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Sandbox;
 using System.Reflection;
 using BepInSbox.Logging;
 using System.Reflection.Emit;
 using static System.Reflection.Emit.OpCodes;
-using Sandbox.Engine;
 
 //if we call it "Sandbox" it'll be annoying anytime we want to call anything in the actual Sandbox namespace
 #pragma warning disable IDE0130 // Namespace does not match folder structure
@@ -52,21 +50,50 @@ namespace BepInSbox.Core.Sbox
 
         internal static HashSet<Type> ImplementsOnPreRenderComponentList { get; } = new HashSet<Type>();
 
-        internal static void Patch()
+        /// <summary>
+        /// We load very early in the engine's intialisation, it doesn't even have time to load the Sandbox.GameInstance.dll yet, which we need for a patch later.
+        /// Instead we start listening to <seealso cref="AppDomain.AssemblyLoad"/> for whenever the dll we're looking for gets loaded, which then kicks off the chainloader
+        /// </summary>
+        /// <param name="onEngineLoaded">The chainloader's <c>Initialize</c> method, ideally</param>
+        internal static void PreHook(Action onEngineLoaded)
         {
-            //GameInstance is an internal type in an assembly with no public types
-            MethodBase openStartupSceneMethod = AccessTools.Method(AccessTools.AllTypes().Where(type => type.Name == "GameInstance").First(), "OpenStartupScene");
+            AppDomain.CurrentDomain.AssemblyLoad += OnAssemblyLoad;
 
-            HarmonyInstance.Patch(openStartupSceneMethod, postfix: new HarmonyMethod(PatchOpenStartupScene));
+            PatchEngine(onEngineLoaded);
+        }
+
+        //types in Sandbox.Engine and Sandbox.System (and another one, I forgot which lol) are already loaded (I think it's technically because we use types from these assemblies, so they're loaded with us?)
+        private static void PatchEngine(Action onEngineLoaded)
+        {
+            Logger.LogDebug("Engine patch");
 
             HarmonyInstance.PatchAll(typeof(ComponentUpdateFix));
 
             //don't have to bother if we're standalone, it's already returning false
             if (!Application.IsStandalone)
             {
-                var errorReporterType = AccessTools.AllTypes().Where(type => type.Name == "ErrorReporter").First();
+                HarmonyInstance.Patch(AccessTools.Method(AccessTools.TypeByName("Sandbox.Engine.ErrorReporter"), "get_IsUsingSentry"), prefix: new HarmonyMethod(NeuterErrorReporter.PreventErrorReporterFromRunning));
+            }
 
-                HarmonyInstance.Patch(AccessTools.Method(errorReporterType, "get_IsUsingSentry"), prefix: new HarmonyMethod(NeuterErrorReporter.PreventErrorReporterFromRunning));
+            onEngineLoaded();
+        }
+
+        //this one is loaded slightly later
+        private static void LatePatch()
+        {
+            Logger.LogDebug("Late patch");
+
+            //GameInstance is an internal type in an assembly with no public types
+            HarmonyInstance.Patch(AccessTools.Method(AccessTools.TypeByName("Sandbox.GameInstance"), "OpenStartupScene"), postfix: new HarmonyMethod(PatchOpenStartupScene));
+        }
+
+        private static void OnAssemblyLoad(object sender, AssemblyLoadEventArgs args)
+        {
+            if (args.LoadedAssembly.FullName.Contains("Sandbox.GameInstance"))
+            {
+                LatePatch();
+
+                AppDomain.CurrentDomain.AssemblyLoad -= OnAssemblyLoad;
             }
         }
 
