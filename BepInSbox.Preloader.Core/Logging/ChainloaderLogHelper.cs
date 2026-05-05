@@ -50,9 +50,15 @@ public static class ChainloaderLogHelper
         Logger.Log(LogLevel.Info, $"System platform: {GetPlatformString()}");
         Logger.Log(LogLevel.Info,
                    //bepinsbox: unneeded (for now, at least), sbox is 64bit only, but it's cute so I'm leaving it in
-                   $"Process bitness: {(Environment.Is64BitProcess ? "64-bit (x64)" : "32-bit (x86)")}");
+                   $"Process bitness: {(Environment.Is64BitProcess ? $"64-bit ({PlatformDetection.Architecture})" : $"32-bit ({PlatformDetection.Architecture})")}");
 
-		Logger.Log(LogLevel.Info, $"Engine version: {File.ReadLines(Path.Combine(Paths.GameRootPath, ".version")).First()}");
+        var versionPath = Path.Combine(Paths.GameRootPath, ".version");
+
+        //standalone doesn't copy .version file, :(
+        if (File.Exists(versionPath))
+        {
+		    Logger.Log(LogLevel.Info, $"Engine version: {File.ReadLines(versionPath).First()}");
+        }
     }
 
     private static string GetPlatformString()
